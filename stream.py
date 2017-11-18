@@ -2,7 +2,7 @@ import numpy as np
 from neopixel import *
 import socket
 
-UDP_IP = "127.168.1.247"
+UDP_IP = "192.168.1.247"
 UDP_PORT = 5005
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
