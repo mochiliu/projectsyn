@@ -4,7 +4,7 @@ class Motif {
 
   PGraphics my_graphic;
   
-  Motif[] my_childern;
+  ArrayList<Motif> my_childern = new ArrayList<Motif>();
   //float[] input_features;
   int[] my_feature_indecies; //the features that this particular motif cares about
   
@@ -15,7 +15,6 @@ class Motif {
     my_width = 0;
     my_height = 0;
     my_graphic = createGraphics(my_width, my_height);
-    my_childern = new Motif[0];
     my_feature_indecies = new int[0];
   }
   
@@ -26,20 +25,21 @@ class Motif {
     my_width = inputw;
     my_height = inputh;
     my_graphic = createGraphics(my_width, my_height);
-    my_childern = new Motif[0];
     my_feature_indecies = input_feature_indecies;
   }
   
   void animate(float[] input_features) {
     // draw the class's graphic based on its childern and itself
     // default is just to draw the childern on itself
-    my_graphic.background(0);
+//    my_graphic.background(0);
     my_graphic.beginDraw();
-    for (int i=0; i < my_childern.length; i++) { 
-      my_childern[i].animate(input_features); //animate the child
-      image(my_childern[i].my_graphic, my_childern[i].xpos, my_childern[i].ypos, my_childern[i].my_width, my_childern[i].my_height);
-    }  
+    my_graphic.clear();
+    for (Motif child : my_childern) { 
+      child.animate(input_features); //animate the child
+      my_graphic.image(child.my_graphic, child.xpos, child.ypos,child.my_width,child.my_height);
+    }
     my_graphic.endDraw();    
   }
+
   
 }
