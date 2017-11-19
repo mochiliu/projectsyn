@@ -6,10 +6,8 @@ class Motif {
   
   Motif[] my_childern;
   //float[] input_features;
-  float[] my_feature_indecies; //the features that this particular motif cares about
+  int[] my_feature_indecies; //the features that this particular motif cares about
   
-
-
   Motif() {
     // default constructor
     xpos = 0;
@@ -18,10 +16,10 @@ class Motif {
     my_height = 0;
     my_graphic = createGraphics(my_width, my_height);
     my_childern = new Motif[0];
-    my_feature_indecies = new float[0];
+    my_feature_indecies = new int[0];
   }
   
-  Motif(float inputx, float inputy, int inputw, int inputh, float[] input_feature_indecies) {
+  Motif(float inputx, float inputy, int inputw, int inputh, int[] input_feature_indecies) {
     // more explicit constructor
     xpos = inputx;
     ypos = inputy;
@@ -34,7 +32,8 @@ class Motif {
   
   void animate(float[] input_features) {
     // draw the class's graphic based on its childern and itself
-    // default is just to draw the childern
+    // default is just to draw the childern on itself
+    my_graphic.background(0);
     my_graphic.beginDraw();
     for (int i=0; i < my_childern.length; i++) { 
       my_childern[i].animate(input_features); //animate the child

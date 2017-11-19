@@ -8,18 +8,22 @@ final int port        = 5005;    // the destination port
 final int framerate = 11; // in Hz
 final int panel_width = 30;
 
+Motif root_motif;
+
 void setup() {
   size(30, 30);
   background(0);
   frameRate(framerate);  
   udp = new UDP(this, 6000);
   udp.setBuffer(panel_width*panel_width*3);
-
+  
+  root_motif = new leafmotif_Circle(5,color(255, 0, 0),15,15,new int[0]);
 }      
 
 void draw() {
-  stroke(0, 255, 0);
-  line(0, 0, mouseX, mouseY);
+  background(0);
+  root_motif.animate(new float[0]);
+  image(root_motif.my_graphic,root_motif.xpos-(root_motif.my_width/2),root_motif.ypos-(root_motif.my_height/2));
   send_image();
 }
 
