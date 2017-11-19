@@ -18,49 +18,28 @@ void setup() {
   udp = new UDP( this, 6000 );
   udp.setBuffer(2700);
   
-}
-/*
+  getVolume();
+  
+} 
+
+void getVolume() {
   // Create amplitude object
   amp = new Amplitude(this);
   
   // Create the Input stream
   in = new AudioIn(this, 0);
   
-  // to start playing what is coming into mic
-  //in.play();
-  
   // to start input audio stream
   in.start();
-  amp.input(in);
-  
-}      
-*/
-
-float getVolume() {
-  // Create amplitude object
-  amp = new Amplitude(this);
-  
-  // Create the Input stream
-  in = new AudioIn(this,0);
-  
-  // to start playing what is coming into mic
-  //in.play();
-  
-  // to start input audio stream
-  in.start();
-  amp.input(in);
-  
-  //float vol;
-  return amp.analyze();
- // return vol;
+  amp.input(in); 
 }
+
 
 void draw() {
   println(amp.analyze());
-  println(getVolume());
   
   int scale=1000;
-  float vol = getVolume();
+  float vol = amp.analyze();
   float radius = vol*scale;
   
   fill(0,255,0);
