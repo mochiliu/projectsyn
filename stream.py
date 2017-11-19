@@ -36,5 +36,5 @@ strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ,
 strip.begin()
 
 while True:
-	data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
+	data, addr = sock.recvfrom(2700) # buffer size is 2700 bytes
 	print "received message:", data
