@@ -2,8 +2,6 @@ import processing.sound.*;
 
 // initialize udp port
 import hypermedia.net.*;    // import UDP library
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 UDP udp;  // define the UDP object (sets up)
 final String ip       = "192.168.1.247";  // the remote IP address of Host
 final int port        = 5005;    // the destination port
@@ -35,5 +33,5 @@ void send_image() {
   }    
   //println(RGB_array[0]);
   // send to pi
-  udp.send(RGB_array, ip, port );
+  udp.send(RGB_array, ip, port);
 }
