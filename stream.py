@@ -1,7 +1,8 @@
 import numpy as np
 from neopixel import *
 import socket
-import binascii
+import struct
+
 
 UDP_IP = "192.168.1.247"
 UDP_PORT = 5005
@@ -37,8 +38,21 @@ strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ,
 strip.begin()
 
 def hexint(b):
-    return int(binascii.hexlify(b), 16)
+    return int(binascii.hexlify(b), 8)
+
+def recv_into(arr,source):
+	view = memoryview(arr).cast('B')
+	while len(view):
+		nrecv = source.recv_into(view)
+		view = view[nrecv:]
 
 while True:
 	data, addr = sock.recvfrom(2700) # buffer size is 2700 bytes
-	print "received message:", hexint(data)
+	linear_array = np.zeros(2700, dtype=np.int)
+	s = ""
+	for i in range(2700):
+		s+="B"
+	linear_array = struct.unpack(s,data)
+	print "received message:", linear_array
+	matrix = np.reshape(linear_array, (30,30,3));
+	set_from_matrix(strip, matrix)
