@@ -23,16 +23,16 @@ void setup() {
 void draw() {
   println(amp.analyze());
   fill(0,255,0);
-  ellipse(mouseX,mouseY,amp.analyze()*5000,amp.analyze()*5000);
+  ellipse(mouseX,mouseY,amp.analyze()*500,amp.analyze()*500);
   fill(255,0,0);
-  ellipse(mouseX-5,mouseY-5,amp.analyze()*5000,amp.analyze()*5000);
+  ellipse(mouseX-5,mouseY-5,amp.analyze()*500,amp.analyze()*500);
   fill(0,0,255);
-  ellipse(mouseX+5,mouseY+5,amp.analyze()*5000,amp.analyze()*5000);
+  ellipse(mouseX+5,mouseY+5,amp.analyze()*500,amp.analyze()*500);
   
   fill(255,255,0);
-  ellipse(mouseX+5,mouseY-5,amp.analyze()*5000,amp.analyze()*5000);
+  ellipse(mouseX+5,mouseY-5,amp.analyze()*500,amp.analyze()*500);
   fill(0,255,255);
-  ellipse(mouseX-5,mouseY+5,amp.analyze()*5000,amp.analyze()*5000);
+  ellipse(mouseX-5,mouseY+5,amp.analyze()*500,amp.analyze()*500);
   //background(0);
 }
 
