@@ -1,6 +1,5 @@
 import processing.sound.*;
 
-
 // initialize udp port
 import hypermedia.net.*;    // import UDP library
 import java.nio.ByteBuffer;
