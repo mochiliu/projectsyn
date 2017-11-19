@@ -1,6 +1,7 @@
 import numpy as np
 from neopixel import *
 import socket
+import binascii
 
 UDP_IP = "192.168.1.247"
 UDP_PORT = 5005
@@ -35,6 +36,9 @@ strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ,
                           LED_CHANNEL, LED_STRIP)
 strip.begin()
 
+def hexint(b):
+    return int(binascii.hexlify(b), 16)
+
 while True:
 	data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-	print "received message:", data
+	print "received message:", hexint(data)
