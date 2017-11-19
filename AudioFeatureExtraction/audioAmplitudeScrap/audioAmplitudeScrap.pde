@@ -1,6 +1,14 @@
 import processing.sound.*;
 AudioIn in;
 Amplitude amp;
+FFT fft;
+int bands = 512;
+float[] spectrum = new float[bands];
+
+int[] colors = new int[255];{
+for (int i=0;i <255;++i){
+colors[i]=i;
+}}
 
 import hypermedia.net.*;    // import UDP library
 import java.nio.ByteBuffer;
@@ -20,6 +28,8 @@ void setup() {
   
   getVolume();
   
+  getFFT();
+  
 } 
 
 void getVolume() {
@@ -34,18 +44,31 @@ void getVolume() {
   amp.input(in); 
 }
 
+void getFFT() {
+  // Create an Input stream which is routed into the Amplitude analyzer
+  fft = new FFT(this, bands);
+  in = new AudioIn(this, 0);
+  
+  // start the Audio Input
+  in.start();
+  
+  // patch the AudioIn
+  fft.input(in);
+}
+
 
 void draw() {
-  println(amp.analyze());
+  
+  //println(amp.analyze());
   
   int scale=1000;
   float vol = amp.analyze();
   float radius = vol*scale;
   
-  fill(0,255,0);
+  fill(0,0,0);
   ellipse(mouseX,mouseY,radius, radius);
   
-  fill(255,0,0);
+  fill(0,255,0);
   ellipse(mouseX-5,mouseY-5,radius,radius);
   
   fill(0,0,255);
@@ -58,19 +81,34 @@ void draw() {
   ellipse(mouseX-5,mouseY+5,radius,radius);
   
   fill(255,255,255);
-  ellipse(mouseX,mouseY+7.07,radius,radius);
+  ellipse(mouseX,mouseY+7.07,radius/2,radius/2);
   
   fill(255,255,255);
-  ellipse(mouseX,mouseY-7.07,radius,radius);
+  ellipse(mouseX,mouseY-7.07,radius/2,radius/2);
   
   fill(255,255,255);
-  ellipse(mouseX+7.07,mouseY,radius,radius);
+  ellipse(mouseX+7.07,mouseY,radius/2,radius/2);
   
   fill(255,255,255);
-  ellipse(mouseX-7.07,mouseY,radius,radius);
+  ellipse(mouseX-7.07,mouseY,radius/2,radius/2);
   
   //background(0);
+  
+  
+  //background(255);
+  fft.analyze(spectrum);
 
+  for(int i = 0; i < 30; i++){
+  // The result of the FFT is normalized
+  // draw the line for frequency band i scaling it up by 5 to get more amplitude.
+  stroke(colors[i*8],0,0);
+  println(colors[i*8]);
+  //println(i);
+  line( i, height, i, height - spectrum[i]*height*70 );
+  } 
+  
+  
+  
   
   loadPixels(); 
   byte[] RGB_array = new byte[pixels.length * 3];
