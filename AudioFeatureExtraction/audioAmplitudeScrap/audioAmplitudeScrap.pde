@@ -18,7 +18,8 @@ void setup() {
   udp = new UDP( this, 6000 );
   udp.setBuffer(2700);
   
-
+}
+/*
   // Create amplitude object
   amp = new Amplitude(this);
   
@@ -31,21 +32,64 @@ void setup() {
   // to start input audio stream
   in.start();
   amp.input(in);
+  
 }      
+*/
+
+float getVolume() {
+  // Create amplitude object
+  amp = new Amplitude(this);
+  
+  // Create the Input stream
+  in = new AudioIn(this,0);
+  
+  // to start playing what is coming into mic
+  //in.play();
+  
+  // to start input audio stream
+  in.start();
+  amp.input(in);
+  
+  //float vol;
+  return amp.analyze();
+ // return vol;
+}
 
 void draw() {
   println(amp.analyze());
+  println(getVolume());
+  
+  int scale=1000;
+  float vol = getVolume();
+  float radius = vol*scale;
+  
   fill(0,255,0);
-  ellipse(mouseX,mouseY,amp.analyze()*500,amp.analyze()*500);
+  ellipse(mouseX,mouseY,radius, radius);
+  
   fill(255,0,0);
-  ellipse(mouseX-5,mouseY-5,amp.analyze()*500,amp.analyze()*500);
+  ellipse(mouseX-5,mouseY-5,radius,radius);
+  
   fill(0,0,255);
-  ellipse(mouseX+5,mouseY+5,amp.analyze()*500,amp.analyze()*500);
+  ellipse(mouseX+5,mouseY+5,radius,radius);
   
   fill(255,255,0);
-  ellipse(mouseX+5,mouseY-5,amp.analyze()*500,amp.analyze()*500);
+  ellipse(mouseX+5,mouseY-5,radius,radius);
+  
   fill(0,255,255);
-  ellipse(mouseX-5,mouseY+5,amp.analyze()*500,amp.analyze()*500);
+  ellipse(mouseX-5,mouseY+5,radius,radius);
+  
+  fill(255,255,255);
+  ellipse(mouseX,mouseY+7.07,radius,radius);
+  
+  fill(255,255,255);
+  ellipse(mouseX,mouseY-7.07,radius,radius);
+  
+  fill(255,255,255);
+  ellipse(mouseX+7.07,mouseY,radius,radius);
+  
+  fill(255,255,255);
+  ellipse(mouseX-7.07,mouseY,radius,radius);
+  
   //background(0);
 
   
