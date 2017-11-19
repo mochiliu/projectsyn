@@ -40,5 +40,5 @@ def hexint(b):
     return int(binascii.hexlify(b), 16)
 
 while True:
-	data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
+	data, addr = sock.recvfrom(2700) # buffer size is 2700 bytes
 	print "received message:", hexint(data)
