@@ -6,7 +6,7 @@ FFT fft;
 int bands = 512;
 float[] spectrum = new float[bands];
 
-float[] features = new float[1];
+float[] features = new float[2];
 
 // initialize udp port
 import hypermedia.net.*;    // import UDP library
@@ -27,12 +27,13 @@ void setup() {
   udp = new UDP(this, 6000);
   udp.setBuffer(panel_width*panel_width*3);
   
-  int[] relevant_features = {0};
+  int[] relevant_features = {1};
   leaf_motif = new leafmotif_Circle(5,color(255, 0, 0),5,5,relevant_features);
-  root_motif = new nodemotif_Translate(0.01, 0.01, leaf_motif,relevant_features);
+  root_motif = new nodemotif_Translate(0.1, 0.1, leaf_motif,relevant_features);
 
   getVolume();
   getFFT();
+  features[0] = 1; // the first feature is a constant
 }      
 
 void draw() {
@@ -46,7 +47,7 @@ void draw() {
 }
 
 void extractFeatures() {
-  features[0] = amp.analyze()*20;
+  features[1] = amp.analyze()*200;
 }
 
 void getVolume() {
@@ -81,4 +82,5 @@ void send_image() {
   //println(RGB_array[0]);
   // send to pi
   udp.send(RGB_array, ip, port);
+ 
 }

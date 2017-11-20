@@ -41,5 +41,4 @@ class Motif {
     my_graphic.endDraw();    
   }
 
-  
 }
