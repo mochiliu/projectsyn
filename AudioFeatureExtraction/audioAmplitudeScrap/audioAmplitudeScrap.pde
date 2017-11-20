@@ -20,6 +20,7 @@ int port        = 5005;    // the destination port
 
 void setup() {
   size(30, 30);
+  surface.setResizable(true);
   background(0);
   frameRate(11);
   
