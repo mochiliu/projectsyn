@@ -23,8 +23,8 @@ class nodemotif_Translate extends Motif {
     }
     
     xpos = xpos + (x_speed*input_features[my_feature_indecies[0]]);
-    ypos = ypos + y_speed;
+    ypos = ypos + (y_speed*input_features[my_feature_indecies[0]]);
     super.animate(input_features);
-    //println(time);
+     ///println(itimenput_features[my_feature_indecies[0]]);
   }
 }

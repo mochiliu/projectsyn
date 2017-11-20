@@ -6,7 +6,15 @@ FFT fft;
 int bands = 512;
 float[] spectrum = new float[bands];
 
+//set up features
 float[] features = new float[2];
+interface feature_descriptions {
+  int
+  constant = 0, 
+  audio_amplitude = 1;
+}
+
+
 
 // initialize udp port
 import hypermedia.net.*;    // import UDP library
@@ -27,12 +35,14 @@ void setup() {
   udp = new UDP(this, 6000);
   udp.setBuffer(panel_width*panel_width*3);
   
-  int[] relevant_features = {1};
-  leaf_motif = new leafmotif_Circle(5,color(255, 0, 0),5,5,relevant_features);
-  root_motif = new nodemotif_Translate(0.1, 0.1, leaf_motif,relevant_features);
+  int[] leaf_relevant_features = {feature_descriptions.audio_amplitude,feature_descriptions.audio_amplitude};
+  int[] node_relevant_features = {feature_descriptions.constant,feature_descriptions.audio_amplitude};
+//  leaf_motif = new leafmotif_Circle(5,color(255, 0, 0),0,0,leaf_relevant_features);
+  leaf_motif = new leafmotif_Rectangle(5,5,color(255, 0, 0),0,0,leaf_relevant_features);
+  root_motif = new nodemotif_Translate(0.1, 0.1, leaf_motif,node_relevant_features);
 
   getVolume();
-  getFFT();
+  //getFFT();
   features[0] = 1; // the first feature is a constant
 }      
 
@@ -43,11 +53,11 @@ void draw() {
   background(0);
   root_motif.animate(features);
   image(root_motif.my_graphic,root_motif.xpos,root_motif.ypos);
-  send_image();
+  //send_image();
 }
 
 void extractFeatures() {
-  features[1] = amp.analyze()*200;
+  features[1] = amp.analyze()*1000;
 }
 
 void getVolume() {
