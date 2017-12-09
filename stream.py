@@ -53,6 +53,6 @@ while True:
 	for i in range(2700):
 		s+="B"
 	linear_array = struct.unpack(s,data)
-	print "received message:", linear_array
+#	print "received message:", linear_array
 	matrix = np.reshape(linear_array, (30,30,3));
 	set_from_matrix(strip, matrix)
