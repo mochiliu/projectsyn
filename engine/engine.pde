@@ -43,7 +43,7 @@ void setup() {
 
   getVolume();
   //getFFT();
-  features[0] = 1; // the first feature is a constant
+  features[feature_descriptions.constant] = 1; // the first feature is a constant
 }      
 
 void draw() {
@@ -53,11 +53,12 @@ void draw() {
   background(0);
   root_motif.animate(features);
   image(root_motif.my_graphic,root_motif.xpos,root_motif.ypos);
-  //send_image();
+  send_image();
 }
 
 void extractFeatures() {
-  features[1] = amp.analyze()*1000;
+  features[feature_descriptions.audio_amplitude] = amp.analyze()*500;
+  
 }
 
 void getVolume() {
