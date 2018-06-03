@@ -13,6 +13,7 @@ sock.bind((UDP_IP, UDP_PORT))
 
 def set_from_matrix(strip, mat):
     mat = mat.astype(int)
+    mat = np.rot90(mat,3)
     mat[range(mat.shape[0])[::2], :, :] = np.fliplr(mat[range(mat.shape[0])[::2], :, :])
     for r in range(mat.shape[0]):
         for c in range(mat.shape[1]):
