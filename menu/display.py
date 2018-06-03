@@ -15,25 +15,23 @@ class LEDdisplay:
 		self.LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 		self.LED_STRIP      = ws.WS2811_STRIP_GRB   # Strip type and colour ordering
 
-
-	def setup(self):
 		self.strip = Adafruit_NeoPixel(self.LED_COUNT, self.LED_PIN, self.LED_FREQ_HZ,
 		                          self.LED_DMA, self.LED_INVERT, self.LED_BRIGHTNESS,
 		                          self.LED_CHANNEL, self.LED_STRIP)
 		self.strip.begin()
 
-	def set_from_array(linear_array):
+	def set_from_array(self, linear_array):
 		mat = np.reshape(linear_array, (30,30,3));
-	    mat = mat.astype(int)
-	    mat = np.rot90(mat,3)
-	    mat[range(mat.shape[0])[::2], :, :] = np.fliplr(mat[range(mat.shape[0])[::2], :, :])
-	    for r in range(mat.shape[0]):
-	        for c in range(mat.shape[1]):
-	            i = r * mat.shape[1] + c
-	            self.strip.setPixelColorRGB(i, *mat[r, c, :])
-	    self.strip.show()
+		mat = mat.astype(int)
+		mat = np.rot90(mat,3)
+		mat[range(mat.shape[0])[::2], :, :] = np.fliplr(mat[range(mat.shape[0])[::2], :, :])
+		for r in range(mat.shape[0]):
+	        	for c in range(mat.shape[1]):
+	            		i = r * mat.shape[1] + c
+	            		self.strip.setPixelColorRGB(i, *mat[r, c, :])
+	    	self.strip.show()
 
-	def test(self)
+	def test(self):
 		testarray = np.random.randint(256, size=2700)
 		self.set_from_array(testarray)
 
