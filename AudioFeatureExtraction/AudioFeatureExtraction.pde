@@ -3,7 +3,7 @@ AudioIn in;
 Amplitude amp;
 
 void setup() {
-  size(300, 300);
+  size(30, 30);
   background(0);
     
   // Create amplitude object

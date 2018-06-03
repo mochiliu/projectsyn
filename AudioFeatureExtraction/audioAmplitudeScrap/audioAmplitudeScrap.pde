@@ -11,8 +11,6 @@ colors[i]=i;
 }}
 
 import hypermedia.net.*;    // import UDP library
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 PGraphics pg;
 UDP udp;  // define the UDP object (sets up)
 String ip       = "192.168.1.247";  // the remote IP address of Host
@@ -20,7 +18,7 @@ int port        = 5005;    // the destination port
 
 void setup() {
   size(30, 30);
-  surface.setResizable(true);
+  //surface.setResizable(true);
   background(0);
   frameRate(11);
   
