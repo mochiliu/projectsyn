@@ -5,10 +5,10 @@ import numpy as np
 
 
 def init_pygame_display(width, height):
-  os.environ["SDL_VIDEODRIVER"] = "dummy"
-  pg.init()
-  pg.display.set_mode((width, height), 0, 24)
-  return pg.display.get_surface()
+	#os.environ["SDL_VIDEODRIVER"] = "dummy"
+	pg.init()
+	pg.display.set_mode((width, height), pygame.FULLSCREEN, 24)
+	return pg.display.get_surface()
 
 
 class PGMatrixApp:
@@ -54,16 +54,28 @@ class PGMatrixApp:
 
   def run(self):
     self.setup()
-    while True:
-      self.screen.fill(pg.Color(b'black'))
-      self.logic_loop()
-      self.graphics_loop()
-      # send_frame(self.pipe, self.screen)
-      #testarray = np.random.randint(256, size=2700)
-      #self.disp.set_from_array(testarray)
-      self.send_frame()
-      pg.display.update()
-      self.clock.tick(self.fps)
+	while True:
+		for event in pygame.event.get():
+			if event.type == QUIT:
+			    pygame.quit()
+			    sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+			    pygame.quit()
+			    sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+                self.y += self.vy
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+                self.y -= self.vy
+
+		self.screen.fill(pg.Color(b'black'))
+		self.logic_loop()
+		self.graphics_loop()
+		# send_frame(self.pipe, self.screen)
+		#testarray = np.random.randint(256, size=2700)
+		#self.disp.set_from_array(testarray)
+		self.send_frame()
+		pg.display.update()
+		self.clock.tick(self.fps)
 
 
 if __name__ == '__main__':
