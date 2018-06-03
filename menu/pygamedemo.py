@@ -5,7 +5,7 @@ from pygame.locals import *
 pygame.init()
 
 # set up the window
-windowSurface = pygame.display.set_mode((500, 400), 0, 32)
+windowSurface = pygame.display.set_mode((30, 30), 0, 8)
 
 # set up the colors
 BLACK = (0, 0, 0)
@@ -15,7 +15,7 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
 # set up fonts
-basicFont = pygame.font.SysFont(None, 48)
+basicFont = pygame.font.SysFont(None, 5)
 
 # set up the text
 text = basicFont.render('Hello world!', True, WHITE, BLUE)
@@ -40,8 +40,8 @@ windowSurface.fill(WHITE)
 # # draw a red ellipse onto the surface
 # pygame.draw.ellipse(windowSurface, RED, (300, 250, 40, 80), 1)
 
-# draw the text's background rectangle onto the surface
-pygame.draw.rect(windowSurface, RED, (textRect.left - 20, textRect.top - 20, textRect.width + 40, textRect.height + 40))
+# # draw the text's background rectangle onto the surface
+# pygame.draw.rect(windowSurface, RED, (textRect.left - 20, textRect.top - 20, textRect.width + 40, textRect.height + 40))
 
 # # get a pixel array of the surface
 # pixArray = pygame.PixelArray(windowSurface)
