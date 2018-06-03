@@ -52,10 +52,11 @@ class PGMatrixApp:
   def run(self):
     self.setup()
     while True:
+      self.screen.fill(pg.Color(b'black'))
       self.logic_loop()
       self.graphics_loop()
       # send_frame(self.pipe, self.screen)
-      self.screen.fill(pg.Color(b'black'))
+      pg.display.update()
       self.clock.tick(self.fps)
 
 
