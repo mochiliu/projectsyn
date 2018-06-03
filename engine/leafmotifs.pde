@@ -4,7 +4,7 @@ class leafmotif_Circle extends Motif {
   
   leafmotif_Circle(float initial_radius, color initial_color, float inputx, float inputy, int[] input_feature_indecies) {
     // more explicit constructor
-    super(inputx, inputy, 30, 30, input_feature_indecies);
+    super(inputx, inputy, screen_size, screen_size, input_feature_indecies);
     base_radius = initial_radius;
     my_color = initial_color;
   }
@@ -26,7 +26,7 @@ class leafmotif_Rectangle extends Motif {
   
   leafmotif_Rectangle(float initial_width, float initial_height, color initial_color, float inputx, float inputy, int[] input_feature_indecies) {
     // more explicit constructor
-    super(inputx, inputy, 30, 30, input_feature_indecies);
+    super(inputx, inputy, screen_size, screen_size, input_feature_indecies);
     base_width = initial_width;
     base_height = initial_height;
     my_color = initial_color;
