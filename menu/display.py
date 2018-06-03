@@ -23,7 +23,8 @@ class LEDdisplay:
 	def set_from_array(self, linear_array):
 		mat = np.reshape(linear_array, (30,30,3));
 		mat = mat.astype(int)
-		mat = np.rot90(mat,3)
+		mat = np.fliplr(mat)
+		# mat = np.rot90(mat,3)
 		mat[range(mat.shape[0])[::2], :, :] = np.fliplr(mat[range(mat.shape[0])[::2], :, :])
 		for r in range(mat.shape[0]):
 	        	for c in range(mat.shape[1]):

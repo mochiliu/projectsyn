@@ -5,7 +5,7 @@ import numpy as np
 
 
 def init_pygame_display(width, height):
-  #os.environ["SDL_VIDEODRIVER"] = "dummy"
+  os.environ["SDL_VIDEODRIVER"] = "dummy"
   pg.init()
   pg.display.set_mode((width, height), 0, 24)
   return pg.display.get_surface()
@@ -21,11 +21,10 @@ class PGMatrixApp:
     self.disp = LEDdisplay()
 
   def send_frame(self):
-    pixeldata = self.screen.get_view('3')
-    self.disp.set_from_array(pixeldata)
+    self.disp.set_from_array(self.screen.get_view('3'))
 
   def setup(self):
-    self.text = "hello"
+    self.text = "HELLO"
     self.x = 0.0
     self.y = 0.0
     self.t = 0.0
@@ -48,7 +47,7 @@ class PGMatrixApp:
       self.vy *= -1
 
   def graphics_loop(self):
-    font = pg.font.SysFont(None, 5)
+    font = pg.font.SysFont(None, 10)
     label = font.render(self.text, True, pg.Color(b'red'))
 
     self.screen.blit(label, (self.x, self.y))
