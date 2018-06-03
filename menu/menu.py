@@ -7,12 +7,8 @@ import numpy as np
 def init_pygame_display(width, height):
   #os.environ["SDL_VIDEODRIVER"] = "dummy"
   pg.init()
-  pg.display.set_mode((width, height), 0, 8)
+  pg.display.set_mode((width, height), 0, 24)
   return pg.display.get_surface()
-
-
-# def send_frame(pipe, surface):
-#   return os.write(pipe, surface.get_view('0').raw)
 
 
 class PGMatrixApp:
@@ -23,6 +19,10 @@ class PGMatrixApp:
     self.clock = pg.time.Clock();
     self.fps = 10
     self.disp = LEDdisplay()
+
+  def send_frame(self):
+    pixeldata = self.screen.get_view('3')
+    self.disp.set_from_array(pixeldata)
 
   def setup(self):
     self.text = "hello"
@@ -60,9 +60,9 @@ class PGMatrixApp:
       self.logic_loop()
       self.graphics_loop()
       # send_frame(self.pipe, self.screen)
-      testarray = np.random.randint(256, size=2700)
-      self.disp.set_from_array(testarray)
-
+      #testarray = np.random.randint(256, size=2700)
+      #self.disp.set_from_array(testarray)
+      self.send_frame()
       pg.display.update()
       self.clock.tick(self.fps)
 
