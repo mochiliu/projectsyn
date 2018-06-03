@@ -1,5 +1,8 @@
 import os, sys
 import pygame as pg
+from display import LEDdisplay
+import numpy as np
+
 
 def init_pygame_display(width, height):
   #os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -19,7 +22,8 @@ class PGMatrixApp:
     self.screen = init_pygame_display(self.width, self.height)
     self.clock = pg.time.Clock();
     self.fps = 10
-    
+    self.disp = LEDdisplay()
+
   def setup(self):
     self.text = "hello"
     self.x = 0.0
@@ -56,6 +60,9 @@ class PGMatrixApp:
       self.logic_loop()
       self.graphics_loop()
       # send_frame(self.pipe, self.screen)
+      testarray = np.random.randint(256, size=2700)
+      self.disp.set_from_array(testarray)
+
       pg.display.update()
       self.clock.tick(self.fps)
 
