@@ -7,7 +7,7 @@ import numpy as np
 def init_pygame_display(width, height):
 	#os.environ["SDL_VIDEODRIVER"] = "dummy"
 	pg.init()
-	pg.display.set_mode((width, height), pygame.FULLSCREEN, 24)
+	pg.display.set_mode((width, height), pg.FULLSCREEN, 24)
 	return pg.display.get_surface()
 
 
@@ -53,19 +53,19 @@ class PGMatrixApp:
     self.screen.blit(label, (self.x, self.y))
 
   def run(self):
-    self.setup()
+	self.setup()
 	while True:
-		for event in pygame.event.get():
-			if event.type == QUIT:
-			    pygame.quit()
-			    sys.exit()
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-			    pygame.quit()
-			    sys.exit()
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                self.y += self.vy
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                self.y -= self.vy
+		for event in pg.event.get():
+			if event.type == pg.QUIT:
+				pg.quit()
+				sys.exit()
+            		if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+				pg.quit()
+				sys.exit()
+            		if event.type == pg.KEYDOWN and event.key == pg.K_UP:
+                		self.y += self.vy
+            		if event.type == pg.KEYDOWN and event.key == pg.K_DOWN:
+                		self.y -= self.vy
 
 		self.screen.fill(pg.Color(b'black'))
 		self.logic_loop()
