@@ -21,7 +21,8 @@ class Menu:
     lista = []
     pola = []
     font_size = 10
-    font = pygame.font.SysFont(None, font_size)
+    font_path = 'data/coders_crux/coders_crux.ttf'
+    font = pygame.font.Font
     dest_surface = pygame.Surface
     ilosc_pol = 0
     kolor_tla = (51,51,51)
@@ -46,7 +47,10 @@ class Menu:
         self.kolor_tla = background
         self.kolor_tekstu =  text
         self.kolor_zaznaczenia = selection
-        
+
+    def set_font(self, path):
+        self.font_path = path
+
     def get_position(self):
         return self.pozycja_zaznaczenia
     
@@ -76,6 +80,7 @@ class Menu:
     def stworz_strukture(self):
         przesuniecie = 0
         self.menu_height = 0
+        self.font = pygame.font.Font(self.font_path, self.font_size)
         for i in range(self.ilosc_pol):
             self.pola.append(self.Pole())
             self.pola[i].tekst = self.lista[i]
