@@ -27,10 +27,10 @@ class LEDdisplay:
 		# mat = np.rot90(mat,3)
 		mat[range(mat.shape[0])[::2], :, :] = np.fliplr(mat[range(mat.shape[0])[::2], :, :])
 		for r in range(mat.shape[0]):
-	        	for c in range(mat.shape[1]):
-	            		i = r * mat.shape[1] + c
-	            		self.strip.setPixelColorRGB(i, *mat[r, c, :])
-	    	self.strip.show()
+			for c in range(mat.shape[1]):
+				i = r * mat.shape[1] + c
+				self.strip.setPixelColorRGB(i, *mat[r, c, :])
+		self.strip.show()
 
 	def test(self):
 		testarray = np.random.randint(256, size=2700)

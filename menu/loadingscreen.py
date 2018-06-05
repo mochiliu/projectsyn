@@ -1,23 +1,20 @@
-'''
-@author: avalanchy (at) google mail dot com
-@version: 0.1; python 2.7; pygame 1.9.2pre; SDL 1.2.14; MS Windows XP SP3
-@date: 2012-04-08
-@license: This document is under GNU GPL v3
-
-README on the bottom of document.
-
-@font: from http://www.dafont.com/coders-crux.font
-      more abuot license you can find in data/coders-crux/license.txt
-'''
-
+import os, sys
 import pygame
 from pygame.locals import *
 
-if not pygame.display.get_init():
-    pygame.display.init()
+from display import LEDdisplay
+#from menu import Menu
+import numpy as np
 
-if not pygame.font.get_init():
-    pygame.font.init()
+
+def init_pygame_display(width, height):
+	#os.environ["SDL_VIDEODRIVER"] = "dummy"
+	pygame.init()
+	pygame.display.set_mode((width, height), pygame.FULLSCREEN, 24)
+	return pygame.display.get_surface()
+
+def send_frame(myLEDdisplay, game_surface):
+  myLEDdisplay.set_from_array(game_surface.get_view('3'))
 
 
 class Menu:
@@ -34,6 +31,7 @@ class Menu:
     pozycja_wklejenia = (0,0)
     menu_width = 0
     menu_height = 0
+    disp = LEDdisplay()
 
     class Pole:
         tekst = ''
@@ -72,6 +70,7 @@ class Menu:
         for i in range(self.ilosc_pol):
             menu.blit(self.pola[i].pole,self.pola[i].pole_rect)
         self.dest_surface.blit(menu,self.pozycja_wklejenia)
+        send_frame(self.disp, self.dest_surface)
         return self.pozycja_zaznaczenia
 
     def stworz_strukture(self):
@@ -104,50 +103,41 @@ class Menu:
         self.pozycja_wklejenia = (x+mx, y+my) 
 
 
-if __name__ == "__main__":
-    import sys
-    surface = pygame.display.set_mode((854,480)) #0,6671875 and 0,(6) of HD resoultion
-    surface.fill((51,51,51))
-    '''First you have to make an object of a *Menu class.
-    *init take 2 arguments. List of fields and destination surface.
-    Then you have a 4 configuration options:
-    *set_colors will set colors of menu (text, selection, background)
-    *move_menu is quite interseting. It is only option which you can use before 
-    and after *init statement. When you use it before you will move menu from 
-    center of your surface. When you use it after it will set constant coordinates. 
-    Uncomment every one and check what is result!
-    *draw will blit menu on the surface. Be carefull better set only -1 and 1 
-    arguments to move selection or nothing. This function will return actual 
-    position of selection.
-    *get_postion will return actual position of seletion. '''
-    menu = Menu()#necessary
-    #menu.set_colors((255,255,255), (0,0,255), (0,0,0))#optional
-    #menu.set_fontsize(64)#optional
-    #menu.set_font('data/couree.fon')#optional
-    #menu.move_menu(100, 99)#optional
-    menu.init(['Start','Options','Quit'], surface)#necessary
-    #menu.move_menu(0, 0)#optional
-    menu.draw()#necessary
-    
-    pygame.key.set_repeat(199,69)#(delay,interval)
-    pygame.display.update()
-    while 1:
-        for event in pygame.event.get():
-            if event.type == KEYDOWN:
-                if event.key == K_UP:
-                    menu.draw(-1) #here is the Menu class function
-                if event.key == K_DOWN:
-                    menu.draw(1) #here is the Menu class function
-                if event.key == K_RETURN:
-                    if menu.get_position() == 2:#here is the Menu class function
-                        pygame.display.quit()
-                        sys.exit()                        
-                if event.key == K_ESCAPE:
-                    pygame.display.quit()
-                    sys.exit()
-                pygame.display.update()
-            elif event.type == QUIT:
-                pygame.display.quit()
-                sys.exit()
-        pygame.time.wait(8)
-        
+if __name__ == '__main__':
+  fps = 10
+  #disp = LEDdisplay()
+  width = 30
+  height = 30
+  clock = pygame.time.Clock();
+
+  surface = init_pygame_display(width, height)
+  surface.fill((51,51,51))
+
+  menu = Menu()
+  menu.init(['Start','Options','Quit'], surface)
+  #menu.move_menu(0, 0)#optional
+  menu.draw()#necessary
+  
+  pygame.key.set_repeat(199,69)#(delay,interval)
+  pygame.display.update()
+  while 1:
+      for event in pygame.event.get():
+          if event.type == KEYDOWN:
+              if event.key == K_UP:
+                  menu.draw(-1) #here is the Menu class function
+              if event.key == K_DOWN:
+                  menu.draw(1) #here is the Menu class function
+              if event.key == K_RETURN:
+                  if menu.get_position() == 2:#here is the Menu class function
+                      pygame.display.quit()
+                      sys.exit()                        
+              if event.key == K_ESCAPE:
+                  pygame.display.quit()
+                  sys.exit()
+              pygame.display.update()
+          elif event.type == QUIT:
+              pygame.display.quit()
+              sys.exit()
+      #clock.tick(fps)
+
+      
