@@ -3,7 +3,6 @@ import pygame
 from pygame.locals import *
 
 from display import LEDdisplay
-#from menu import Menu
 import numpy as np
 
 
@@ -25,9 +24,9 @@ class Menu:
     font = pygame.font.Font
     dest_surface = pygame.Surface
     ilosc_pol = 0
-    kolor_tla = (51,51,51)
-    kolor_tekstu =  (255, 255, 153)
-    kolor_zaznaczenia = (153,102,255)
+    kolor_tla = (0,0,0)
+    kolor_tekstu =  (0,255,0)
+    kolor_zaznaczenia = (50,0,0)
     pozycja_zaznaczenia = 0
     pozycja_wklejenia = (0,0)
     menu_width = 0
@@ -119,7 +118,7 @@ if __name__ == '__main__':
   surface.fill((51,51,51))
 
   menu = Menu()
-  menu.init(['Start','Options','Quit'], surface)
+  menu.init(['START','OPTIONS','QUIT'], surface)
   #menu.move_menu(0, 0)#optional
   menu.draw()#necessary
   
