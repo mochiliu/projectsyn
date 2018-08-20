@@ -15,6 +15,8 @@ OVERSENSITIVE = 15.0/INPUT_BLOCK_TIME
 UNDERSENSITIVE = 120.0/INPUT_BLOCK_TIME 
 # if the noise was longer than this many blocks, it's not a 'tap'
 MAX_TAP_BLOCKS = 0.15/INPUT_BLOCK_TIME
+# the number of seconds the second tap has to be in for it to be double tap
+MIN_DOUBLETAP_TIMING = 1.5/INPUT_BLOCK_TIME
 
 def get_rms( block ):
     # RMS amplitude is defined as the square root of the 
@@ -46,6 +48,7 @@ class TapTester(object):
         self.noisycount = MAX_TAP_BLOCKS+1 
         self.quietcount = 0 
         self.errorcount = 0
+        self.lasttap = MIN_DOUBLETAP_TIMING+1; #how many chunks since the last tap
 
     def stop(self):
         self.stream.close()
@@ -79,8 +82,14 @@ class TapTester(object):
 
         return stream
 
-    def tapDetected(self): #DETECTED
+    def tapDetected(self): #One tap DETECTED
         print ("tapped")
+        if self.lasttap <= MIN_DOUBLETAP_TIMING
+            self.doubleTapDetected()
+        self.lasttap = 0
+
+    def doubleTapDetected(self):
+        print ("double tap")
 
     def listen(self):
         try:
@@ -104,6 +113,9 @@ class TapTester(object):
                 self.tapDetected()
             self.noisycount = 0
             self.quietcount += 1
+
+        if self.lasttap <= MIN_DOUBLETAP_TIMING
+            self.lasttap += 1
 
 if __name__ == "__main__":
     tt = TapTester()
