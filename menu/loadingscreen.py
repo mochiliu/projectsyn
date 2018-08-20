@@ -23,12 +23,12 @@ class Menu:
     font_path = 'data/coders_crux/coders_crux.ttf'
     font = pygame.font.Font
     dest_surface = pygame.Surface
-    ilosc_pol = 0
-    kolor_tla = (0,0,0)
-    kolor_tekstu =  (0,255,0)
-    kolor_zaznaczenia = (50,0,0)
-    pozycja_zaznaczenia = 0
-    pozycja_wklejenia = (0,0)
+    item_count = 0
+    color_background = (0,0,0)
+    color_text =  (0,255,0)
+    color_selection = (50,0,0)
+    selection_position = 0
+    move_correction = (0,0)
     menu_width = 0
     menu_height = 0
     disp = LEDdisplay()
@@ -40,62 +40,62 @@ class Menu:
         zaznaczenie_rect = pygame.Rect
 
     def move_menu(self, top, left):
-        self.pozycja_wklejenia = (top,left) 
+        self.move_correction = (top,left) 
 
     def set_colors(self, text, selection, background):
-        self.kolor_tla = background
-        self.kolor_tekstu =  text
-        self.kolor_zaznaczenia = selection
+        self.color_background = background
+        self.color_text =  text
+        self.color_selection = selection
 
     def set_font(self, path):
         self.font_path = path
 
     def get_position(self):
-        return self.pozycja_zaznaczenia
+        return self.selection_position
     
     def init(self, lista, dest_surface):
         self.lista = lista
         self.dest_surface = dest_surface
-        self.ilosc_pol = len(self.lista)
+        self.item_count = len(self.lista)
         self.stworz_strukture()        
         
-    def draw(self,przesun=0):
-        if przesun:
-            self.pozycja_zaznaczenia += przesun 
-            if self.pozycja_zaznaczenia == -1:
-                self.pozycja_zaznaczenia = self.ilosc_pol - 1
-            self.pozycja_zaznaczenia %= self.ilosc_pol
+    def draw(self,move=0):
+        if move:
+            self.selection_position += move 
+            if self.selection_position == -1:
+                self.selection_position = self.item_count - 1
+            self.selection_position %= self.item_count
         menu = pygame.Surface((self.menu_width, self.menu_height))
-        menu.fill(self.kolor_tla)
-        zaznaczenie_rect = self.pola[self.pozycja_zaznaczenia].zaznaczenie_rect
-        pygame.draw.rect(menu,self.kolor_zaznaczenia,zaznaczenie_rect)
+        menu.fill(self.color_background)
+        zaznaczenie_rect = self.pola[self.selection_position].zaznaczenie_rect
+        pygame.draw.rect(menu,self.color_selection,zaznaczenie_rect)
 
-        for i in range(self.ilosc_pol):
+        for i in range(self.item_count):
             menu.blit(self.pola[i].pole,self.pola[i].pole_rect)
-        self.dest_surface.blit(menu,self.pozycja_wklejenia)
+        self.dest_surface.blit(menu,self.move_correction)
         send_frame(self.disp, self.dest_surface)
-        return self.pozycja_zaznaczenia
+        return self.selection_position
 
     def stworz_strukture(self):
-        przesuniecie = 0
+        moveiecie = 0
         self.menu_height = 0
         self.font = pygame.font.Font(self.font_path, self.font_size)
-        for i in range(self.ilosc_pol):
+        for i in range(self.item_count):
             self.pola.append(self.Pole())
             self.pola[i].tekst = self.lista[i]
-            self.pola[i].pole = self.font.render(self.pola[i].tekst, 1, self.kolor_tekstu)
+            self.pola[i].pole = self.font.render(self.pola[i].tekst, 1, self.color_text)
 
             self.pola[i].pole_rect = self.pola[i].pole.get_rect()
-            przesuniecie = int(self.font_size * 0.2)
+            moveiecie = int(self.font_size * 0.2)
 
             height = self.pola[i].pole_rect.height
-            self.pola[i].pole_rect.left = przesuniecie
-            self.pola[i].pole_rect.top = przesuniecie+(przesuniecie*2+height)*i
+            self.pola[i].pole_rect.left = moveiecie
+            self.pola[i].pole_rect.top = moveiecie+(moveiecie*2+height)*i
 
-            width = self.pola[i].pole_rect.width+przesuniecie*2
-            height = self.pola[i].pole_rect.height+przesuniecie*2            
-            left = self.pola[i].pole_rect.left-przesuniecie
-            top = self.pola[i].pole_rect.top-przesuniecie
+            width = self.pola[i].pole_rect.width+moveiecie*2
+            height = self.pola[i].pole_rect.height+moveiecie*2            
+            left = self.pola[i].pole_rect.left-moveiecie
+            top = self.pola[i].pole_rect.top-moveiecie
 
             self.pola[i].zaznaczenie_rect = (left,top ,width, height)
             if width > self.menu_width:
@@ -103,8 +103,8 @@ class Menu:
             self.menu_height += height
         x = self.dest_surface.get_rect().centerx - self.menu_width / 2
         y = self.dest_surface.get_rect().centery - self.menu_height / 2
-        mx, my = self.pozycja_wklejenia
-        self.pozycja_wklejenia = (x+mx, y+my) 
+        mx, my = self.move_correction
+        self.move_correction = (x+mx, y+my) 
 
 
 if __name__ == '__main__':

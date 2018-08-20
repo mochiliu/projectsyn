@@ -19,7 +19,7 @@ void fileSelected(File selection) {
 
 void setup() {
   size(30,30);
-  frameRate(1);
+  frameRate(11);
   udp = new UDP( this, 6000 );
   udp.setBuffer(2700);
   selectInput("Select a file to process:", "fileSelected");
