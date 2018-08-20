@@ -25,25 +25,26 @@ ArrayList<Blob> blobs = new ArrayList<Blob>();
 
 
 // initialize udp port
-import hypermedia.net.*;    // import UDP library
-UDP udp;  // define the UDP object (sets up)
+//import hypermedia.net.*;    // import UDP library
+//UDP udp;  // define the UDP object (sets up)
 final String ip       = "192.168.1.247";  // the remote IP address of Host
 final int port        = 5005;    // the destination port
 final int framerate = 11; // in Hz
 final int panel_width = 30;
 
 void setup() {
-  fullScreen(2);
+  //fullScreen(2);
   canvas_width = width;
   canvas_height = height;
   String[] cameras = Capture.list();
   printArray(cameras);
-  video = new Capture(this, cameras[5]);
-  video.start();
+  //video = new Capture(this, cameras[5]);
+  //video = new Capture(this, cameras[1]);
+  ///video.start();
   
   //frameRate(framerate);  
-  udp = new UDP(this, 6000);
-  udp.setBuffer(panel_width*panel_width*3);
+  //udp = new UDP(this, 6000);
+  //udp.setBuffer(panel_width*panel_width*3);
 }
 
 void captureEvent(Capture video) {
@@ -71,22 +72,22 @@ void mousePressed() {
 }
 
 void draw() {
-  clear();
-  background(0);
-  //rotate(HALF_PI);
-  video.loadPixels();
-  if (video.width > 0) {
-    //make sure we are receiving a stream 
+  //clear();
+  //background(0);
+  ////rotate(HALF_PI);
+  //video.loadPixels();
+  //if (video.width > 0) {
+  //  //make sure we are receiving a stream 
 
-    track();
-    //image(reflected_video, 0, 0);
+  //  track();
+  //  //image(reflected_video, 0, 0);
 
-    for (Blob b : blobs) {
-      b.relative_show();
-    } 
+  //  for (Blob b : blobs) {
+  //    b.relative_show();
+  //  } 
     
-    //send_image();
-  }
+  //  //send_image();
+  //}
 }
 
 
@@ -238,6 +239,6 @@ void send_image() {
   }    
   //println(RGB_array[0]);
   // send to pi
-  udp.send(RGB_array, ip, port);
+  //udp.send(RGB_array, ip, port);
  
 }
