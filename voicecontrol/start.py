@@ -1,7 +1,7 @@
 
 from clapdetection import TapTester
 import RPi.GPIO as GPIO
-from display import LEDDisplay
+from display import LEDdisplay
 import time
 
 
@@ -27,10 +27,9 @@ def display_listening_indicator():
 	#display on the LED panel the listening indicator
 	if not powerstate:
 		#turn the LED panel ON if it is not already on
-    	powerstate = True
-    	set_power_state() 
-
-    disp.set_from_image_path("listening.bmp")
+	    	powerstate = True
+    		set_power_state() 
+	disp.set_from_image_path("listening.bmp")
 
 
 
@@ -38,7 +37,7 @@ if __name__ == "__main__":
 
     while True:
     	# never stop
-		tt = TapTester()
+	tt = TapTester()
     	while tt.doubleTap == False:
         	tt.listen()
         # we got a double clap!
