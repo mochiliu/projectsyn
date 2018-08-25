@@ -1,8 +1,12 @@
 
 from clapdetection import TapTester
 import RPi.GPIO as GPIO
-powerstate = False
+from display import LEDDisplay
+import time
 
+
+powerstate = False
+disp = LEDdisplay()
 
 def set_power_state():
 	# set the power state of the light panel, to save energy and reduce excess noise
@@ -12,7 +16,11 @@ def set_power_state():
 	GPIO.output(powersupplypin,powerstate)
 
 def listen_for_voice_command():
-
+	#listen for a command after booting up the LED strips
+	display_listening_indicator()
+	time.sleep(10)
+	powerstate = False
+	set_power_state()
 
 
 def display_listening_indicator():
@@ -22,7 +30,8 @@ def display_listening_indicator():
     	powerstate = True
     	set_power_state() 
 
-	
+    disp.set_from_image_path("listening.bmp")
+
 
 
 if __name__ == "__main__":
@@ -33,6 +42,6 @@ if __name__ == "__main__":
     	while tt.doubleTap == False:
         	tt.listen()
         # we got a double clap!
-
+        listen_for_voice_command()
         
 
