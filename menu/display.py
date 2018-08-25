@@ -42,4 +42,4 @@ class LEDdisplay:
 		self.set_from_array(testarray)
 
 if __name__ == '__main__':
-	LEDdisplay().set_from_image_path(dir + "listening.png")
+	LEDdisplay().set_from_image_path("listening.bmp")
