@@ -1,6 +1,7 @@
 import numpy as np
 from neopixel import *
-
+from PIL import Image
+import os
 
 class LEDdisplay:
 	def __init__(self):
@@ -32,9 +33,13 @@ class LEDdisplay:
 				self.strip.setPixelColorRGB(i, *mat[r, c, :])
 		self.strip.show()
 
+	def set_from_image_path(self, imagepath):
+		loaded_image = np.reshape(np.array(Image.open(imagepath)),[2700])
+		self.set_from_array(loaded_image)
+
 	def test(self):
 		testarray = np.random.randint(256, size=2700)
 		self.set_from_array(testarray)
 
 if __name__ == '__main__':
-	LEDdisplay().test()
+	LEDdisplay().set_from_image_path(dir + "listening.png")
