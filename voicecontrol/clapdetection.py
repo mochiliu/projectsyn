@@ -91,7 +91,10 @@ class TapTester(object):
 
     def doubleTapDetected(self):
         print ("double tap")
-        self.doubleTap = True;
+        self.doubleTap = True
+
+    def resetDoubleTap(self):
+        self.doubleTap = False
 
     def listen(self):
         try:

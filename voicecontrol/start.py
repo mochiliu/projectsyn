@@ -27,16 +27,17 @@ def display_listening_indicator(powerstate, disp):
 if __name__ == "__main__":
 	powerstate = False
 	disp = LEDdisplay()
+	tt = TapTester()
 
-    	while True:
-    		# never stop
-		tt = TapTester()
+	while True:
+		# never stop
+		tt.resetDoubleTap()
 		
-    		while tt.doubleTap == False:
-        		tt.listen()
+		while tt.doubleTap == False:
+    		tt.listen()
 
-        	# we got a double clap!
-    		powerstate = display_listening_indicator(powerstate, disp)
+    	# we got a double clap!
+		powerstate = display_listening_indicator(powerstate, disp)
 		time.sleep(10)
 		powerstate = False
 		set_power_state(powerstate)
