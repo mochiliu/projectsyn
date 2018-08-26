@@ -99,10 +99,10 @@ class TapTester(object):
     def listen(self):
         try:
             block = self.stream.read(INPUT_FRAMES_PER_BLOCK)
-        except e:
+        except:
             # dammit. 
             self.errorcount += 1
-            print( "(%d) Error recording: %s"%(self.errorcount,e) )
+            print( "(%d) Error recording: %s"%(self.errorcount) )
             self.noisycount = 1
             return
 
