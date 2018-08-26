@@ -34,6 +34,7 @@ class LEDdisplay:
 					self.strip.setPixelColorRGB(i, *mat[r, c, :])
 			self.strip.show()
 		except:
+			print('error setting strip')
 
 	def set_from_image_path(self, imagepath):
 		loaded_image = np.reshape(np.array(Image.open(imagepath)),[2700])
