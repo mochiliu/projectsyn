@@ -16,7 +16,7 @@ UNDERSENSITIVE = 120.0/INPUT_BLOCK_TIME
 # if the noise was longer than this many blocks, it's not a 'tap'
 MAX_TAP_BLOCKS = 0.15/INPUT_BLOCK_TIME
 # the number of seconds the second tap has to be in for it to be double tap
-MIN_DOUBLETAP_TIMING = 1/INPUT_BLOCK_TIME
+MIN_DOUBLETAP_TIMING = 0.5/INPUT_BLOCK_TIME
 
 def get_rms( block ):
     # RMS amplitude is defined as the square root of the 
@@ -87,24 +87,26 @@ class TapTester(object):
         print ("tapped")
         if self.lasttap <= MIN_DOUBLETAP_TIMING:
             self.doubleTapDetected()
-        self.lasttap = 0
+	else:
+            self.lasttap = 0
 
     def doubleTapDetected(self):
         print ("double tap")
         self.doubleTap = True
+	self.lastap = MIN_DOUBLETAP_TIMING+1
 
     def resetDoubleTap(self):
         self.doubleTap = False
 
     def listen(self):
-        try:
-            block = self.stream.read(INPUT_FRAMES_PER_BLOCK)
-        except:
+#        try:
+        block = self.stream.read(INPUT_FRAMES_PER_BLOCK, exception_on_overflow = False)
+#        except:
             # dammit. 
-            self.errorcount += 1
-            print( "(%d) Error recording: %s"%(self.errorcount) )
-            self.noisycount = 1
-            return
+#            self.errorcount += 1
+#            print( "(%d) Error recording"%(self.errorcount) )
+#            self.noisycount = 1
+#            return
 
         self.doubleTap = False
         amplitude = get_rms( block )

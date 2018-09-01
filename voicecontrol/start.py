@@ -34,9 +34,9 @@ if __name__ == "__main__":
 		tt.resetDoubleTap()
 		
 		while tt.doubleTap == False:
-    		tt.listen()
+	    		tt.listen()
 
-    	# we got a double clap!
+    		# we got a double clap!
 		powerstate = display_listening_indicator(powerstate, disp)
 		time.sleep(10)
 		powerstate = False
