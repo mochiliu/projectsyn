@@ -137,7 +137,6 @@ def stt_google_wav(audio_fname):
                     wiringpi.digitalWrite(4,0)
                 if alternative.transcript == "lights off":
                     wiringpi.digitalWrite(4,0)
-                return alternative.transcript
 
 
 if(__name__ == '__main__'):
