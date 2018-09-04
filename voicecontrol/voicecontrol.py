@@ -17,7 +17,7 @@ client = speech.SpeechClient()
 LANG_CODE = 'en-US'  # Language to use
 CHANNELS = 1
 RATE = 44100  
-CHUNK = 1024 #CHUNKS of bytes to read each time from mic for google cloud speech
+# CHUNK = 1024 #CHUNKS of bytes to read each time from mic for google cloud speech
 THRESHOLD = 3000  # The threshold intensity that defines silence
 SILENCE_LIMIT = 2  # Silence limit in seconds to stop the recording
 PREV_AUDIO = 0.5  #seconds of audo to prepend to the sending data
@@ -202,7 +202,7 @@ class VoiceController(object):
         print ("* Listening mic. ")
         audio2send = []
         cur_data = ''  # current chunk  of audio data
-        rel = RATE/CHUNK
+        rel = RATE/INPUT_FRAMES_PER_BLOCK
         slid_win = deque(maxlen=math.floor(SILENCE_LIMIT * rel))
         #Prepend audio from 0.5 seconds before noise was detected
         prev_audio = deque(maxlen=math.floor(PREV_AUDIO * rel))
@@ -210,7 +210,7 @@ class VoiceController(object):
         response = []
 
         while (True):
-            cur_data = self.stream.read(CHUNK, exception_on_overflow = False)
+            cur_data = self.stream.read(INPUT_FRAMES_PER_BLOCK, exception_on_overflow = False)
             slid_win.append(math.sqrt(abs(audioop.avg(cur_data, 4))))
             #print slid_win[-1]
             if(sum([x > THRESHOLD for x in slid_win]) > 0):
