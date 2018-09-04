@@ -17,7 +17,7 @@ client = speech.SpeechClient()
 LANG_CODE = 'en-US'  # Language to use
 CHANNELS = 1
 RATE = 44100  
-# CHUNK = 1024 #CHUNKS of bytes to read each time from mic for google cloud speech
+CHUNK = 1024 #CHUNKS of bytes to read each time from mic for google cloud speech
 THRESHOLD = 3000  # The threshold intensity that defines silence
 SILENCE_LIMIT = 2  # Silence limit in seconds to stop the recording
 PREV_AUDIO = 0.5  #seconds of audo to prepend to the sending data
@@ -96,18 +96,18 @@ def stt_google_wav(audio_fname):
                 if alternative.transcript == "exit":
                     return "exit"
                 if alternative.transcript == "light on":
-                    wiringpi.digitalWrite(4,1)
+                    return "light on"
                 if alternative.transcript == "lights on":
-                    wiringpi.digitalWrite(4,1)
+                    return "light on"
                 if alternative.transcript == "light off":
-                    wiringpi.digitalWrite(4,0)
+                    return "light off"
                 if alternative.transcript == "lights off":
-                    wiringpi.digitalWrite(4,0)
+                    return "light off"
 
 class VoiceController(object):
     def __init__(self):
         self.pa = pyaudio.PyAudio()
-        self.stream = self.open_mic_stream()
+        self.stream = None
         self.tap_threshold = INITIAL_TAP_THRESHOLD
         self.noisycount = MAX_TAP_BLOCKS+1 
         self.quietcount = 0 
@@ -136,16 +136,24 @@ class VoiceController(object):
             print( "No preferred input found; using default input device." )
         return device_index
 
-    def open_mic_stream( self ):
+    def open_tap_mic_stream( self ):
         device_index = self.find_input_device()
-
         stream = self.pa.open(   format = FORMAT,
                                  channels = CHANNELS,
                                  rate = RATE,
                                  input = True,
                                  input_device_index = device_index,
                                  frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
+        return stream
 
+    def open_speech_mic_stream( self ):
+        device_index = self.find_input_device()
+        stream = self.pa.open(   format = FORMAT,
+                                 channels = CHANNELS,
+                                 rate = RATE,
+                                 input = True,
+                                 input_device_index = device_index,
+                                 frames_per_buffer = CHUNK)
         return stream
 
     def tapDetected(self): #One tap DETECTED
@@ -165,6 +173,7 @@ class VoiceController(object):
 
     def listen(self):
         self.doubleTap = False
+        self.stream = self.open_tap_mic_stream()
         while self.doubleTap == False:
     #        try:
             block = self.stream.read(INPUT_FRAMES_PER_BLOCK, exception_on_overflow = False)
@@ -192,6 +201,7 @@ class VoiceController(object):
             if self.lasttap <= MIN_DOUBLETAP_TIMING:
                 self.lasttap += 1
         # double tap detected
+        self.stop()
         self.LEDPanelPowerState = display_listening_indicator(self.LEDPanelPowerState, self.disp)
         self.listen_for_speech()
         self.LEDPanelPowerState = False
@@ -199,10 +209,11 @@ class VoiceController(object):
 
     def listen_for_speech(self):
         #Open stream
+        self.stream = self.open_speech_mic_stream()
         print ("* Listening mic. ")
         audio2send = []
         cur_data = ''  # current chunk  of audio data
-        rel = RATE/INPUT_FRAMES_PER_BLOCK
+        rel = RATE/CHUNK
         slid_win = deque(maxlen=math.floor(SILENCE_LIMIT * rel))
         #Prepend audio from 0.5 seconds before noise was detected
         prev_audio = deque(maxlen=math.floor(PREV_AUDIO * rel))
@@ -210,7 +221,7 @@ class VoiceController(object):
         response = []
 
         while (True):
-            cur_data = self.stream.read(INPUT_FRAMES_PER_BLOCK, exception_on_overflow = False)
+            cur_data = self.stream.read(CHUNK, exception_on_overflow = False)
             slid_win.append(math.sqrt(abs(audioop.avg(cur_data, 4))))
             #print slid_win[-1]
             if(sum([x > THRESHOLD for x in slid_win]) > 0):
@@ -220,20 +231,20 @@ class VoiceController(object):
                 audio2send.append(cur_data)
             elif (started is True):
                 self.stream.stop_stream()
+                self.stream.close()
                 print ("Finished")
                 filename = self.save_speech(list(prev_audio) + audio2send)
                 speech_text = stt_google_wav(filename)
+                os.remove(filename)
                 # process speech here maybe?
                 if speech_text == "exit":
                     print ("exiting")
-                    self.pa.terminate()
                     return
                 # Remove temp file. Comment line to review.
-                os.remove(filename)
                 break
             else:
                 prev_audio.append(cur_data)
-        #keep listening for taps if no actions are taken
+        
 
     def save_speech(self, data):
         filename = 'output_'+str(int(time.time()))
