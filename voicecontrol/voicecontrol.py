@@ -152,7 +152,7 @@ class VoiceController(object):
         print ("tapped")
         if self.lasttap <= MIN_DOUBLETAP_TIMING:
             self.doubleTapDetected()
-	else:
+        else:
             self.lasttap = 0
 
     def doubleTapDetected(self):
