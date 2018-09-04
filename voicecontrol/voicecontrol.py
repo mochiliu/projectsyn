@@ -250,6 +250,4 @@ class VoiceController(object):
 
 if __name__ == "__main__":
     vc = VoiceController()
-
-    for i in range(1000):
-        tt.listen()
+    vc.listen()
