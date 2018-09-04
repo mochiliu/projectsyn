@@ -25,8 +25,8 @@ PREV_AUDIO = 0.5  #seconds of audo to prepend to the sending data
 INITIAL_TAP_THRESHOLD = 0.05
 FORMAT = pyaudio.paInt16 
 SHORT_NORMALIZE = (1.0/32768.0)
-INPUT_BLOCK_TIME = double(RATE) / CHUNK
-INPUT_FRAMES_PER_BLOCK = CHUNK #int(RATE*INPUT_BLOCK_TIME)
+INPUT_BLOCK_TIME = 0.05 #float(RATE) / CHUNK
+INPUT_FRAMES_PER_BLOCK = int(RATE*INPUT_BLOCK_TIME)
 # if we get this many noisy blocks in a row, increase the threshold
 OVERSENSITIVE = 15.0/INPUT_BLOCK_TIME                    
 # if we get this many quiet blocks in a row, decrease the threshold
