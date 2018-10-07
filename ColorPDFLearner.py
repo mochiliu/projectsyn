@@ -8,14 +8,14 @@ import os
 import cv2
 import numpy as np
 from scipy.spatial.distance import cdist, euclidean
+from scipy.stats import norm
+from scipy import ndimage
 from google_images_download import google_images_download   #importing the library
 from sklearn.decomposition import PCA
-from scipy.stats import norm
 import shutil
-from scipy import ndimage
 import copy
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 def geometric_median(X, eps=1e-2):
     y = np.mean(X, 0)
@@ -83,7 +83,8 @@ class ColorPDFLearner(object):
     def learnword(self, search_term):
         cwd = os.getcwd()
         imagedir = os.path.join(cwd, 'images')
-
+        pdfdir = os.path.join(cwd, 'colorpdfs')
+        
         search_term_plus_color = search_term +' color'
         response = google_images_download.googleimagesdownload()   #class instantiation
         arguments = {"keywords":search_term_plus_color,"limit":self.num_traing_imgs,"print_urls":True,"output_directory":imagedir,"no_numbering":True,"no_directory":True}   #creating list of arguments
@@ -170,17 +171,19 @@ class ColorPDFLearner(object):
         small_color_pdf = small_color_pdf / np.sum(small_color_pdf)
         
         #save and clean up
-        save_path = os.path.join(cwd, search_term+'.npy')
+        save_path = os.path.join(pdfdir, search_term+'.npy')
         np.save(save_path,small_color_pdf)
         shutil.rmtree(imagedir)
     
     def getwordscdf(self, wordorwords):
         cwd = os.getcwd()
+        pdfdir = os.path.join(cwd, 'colorpdfs')
+
         if isinstance(wordorwords, (list,)):
             #many words
             small_color_pdf = np.ones([256//self.color_resolution,256//self.color_resolution,256//self.color_resolution])
             for word in wordorwords:
-                load_path = os.path.join(cwd, word+'.npy')
+                load_path = os.path.join(pdfdir, word+'.npy')
                 if not os.path.isfile(load_path):
                     #this word is new, learn it first
                     print('learning ' + word)
@@ -189,7 +192,7 @@ class ColorPDFLearner(object):
             small_color_pdf = small_color_pdf / np.sum(small_color_pdf) #normalize
         else:
             #one word
-            load_path = os.path.join(cwd, wordorwords+'.npy')
+            load_path = os.path.join(pdfdir, wordorwords+'.npy')
             if not os.path.isfile(load_path):
                 #this word is new, learn it first
                 print('learning ' + wordorwords)
@@ -249,22 +252,22 @@ if __name__ == "__main__":
     number_of_samples = 20
     sampled_colors = color_learner.samplemultiple('blue', number_of_samples)
     
-    # plot the sampled points
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    for sample_index in range(number_of_samples):
-        ax.scatter(sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index], c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
-    ax.set_xlabel('Red')
-    ax.set_ylabel('Green')
-    ax.set_zlabel('Blue')
-    plt.show()
-
-    # plot the sampled points in sorted order
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    for sample_index in range(number_of_samples):
-        ax.scatter(sample_index, sample_index, sample_index, c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
-    ax.set_xlabel('Red')
-    ax.set_ylabel('Green')
-    ax.set_zlabel('Blue')
-    plt.show()
+#    # plot the sampled points
+#    fig = plt.figure()
+#    ax = fig.add_subplot(111, projection='3d')
+#    for sample_index in range(number_of_samples):
+#        ax.scatter(sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index], c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
+#    ax.set_xlabel('Red')
+#    ax.set_ylabel('Green')
+#    ax.set_zlabel('Blue')
+#    plt.show()
+#
+#    # plot the sampled points in sorted order
+#    fig = plt.figure()
+#    ax = fig.add_subplot(111, projection='3d')
+#    for sample_index in range(number_of_samples):
+#        ax.scatter(sample_index, sample_index, sample_index, c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
+#    ax.set_xlabel('Red')
+#    ax.set_ylabel('Green')
+#    ax.set_zlabel('Blue')
+#    plt.show()
