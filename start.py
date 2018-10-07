@@ -1,11 +1,11 @@
-#from display import LEDdisplay
-
-#from voicecontrol import VoiceController
+import numpy as np
+from display import LEDdisplay
+from voicecontrol import VoiceController
 from ColorPDFLearner import ColorPDFLearner
 
 if __name__ == "__main__":
     powerstate = False
-    #vc = VoiceController()
+    vc = VoiceController()
     color_learner = ColorPDFLearner()
     #while True:
     # never stop
@@ -13,4 +13,8 @@ if __name__ == "__main__":
     word = input("What color?")
     ml_color = color_learner.maxlikelihoodcolor(word)
     print(ml_color)
+    if not powerstate:
+        powerstate = vc.set_LED_power_state(True)
         
+    single_color_linear_array = np.tile(ml_color, 900)
+    display.set_from_array(single_color_linear_array)
