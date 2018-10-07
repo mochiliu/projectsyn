@@ -88,21 +88,8 @@ def stt_google_wav(audio_fname):
         audio = types.RecognitionAudio(content=content)
         config = types.RecognitionConfig(encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16, sample_rate_hertz=RATE, language_code=LANG_CODE)
         response = client.recognize(config, audio)
-        for result in response.results:
-            for alternative in result.alternatives:
-                print('=' * 20)
-                print('transcript: ' + alternative.transcript)
-                print('confidence: ' + str(alternative.confidence))
-                if alternative.transcript == "exit":
-                    return "exit"
-                if alternative.transcript == "light on":
-                    return "light on"
-                if alternative.transcript == "lights on":
-                    return "light on"
-                if alternative.transcript == "light off":
-                    return "light off"
-                if alternative.transcript == "lights off":
-                    return "light off"
+        return response
+
 
 class VoiceController(object):
     def __init__(self):
@@ -115,7 +102,10 @@ class VoiceController(object):
         self.lasttap = MIN_DOUBLETAP_TIMING+1 #how many chunks since the last tap
         self.doubleTap = False
         self.LEDPanelPowerState = False
-        self.disp = LEDdisplay()
+        self.disp = None
+
+    def set_display(self, disp)
+        self.disp = disp
 
     def stop(self):
         self.stream.close()
@@ -203,9 +193,9 @@ class VoiceController(object):
         # double tap detected
         self.stop()
         self.LEDPanelPowerState = display_listening_indicator(self.LEDPanelPowerState, self.disp)
-        self.listen_for_speech()
-        self.LEDPanelPowerState = False
-        set_power_state(self.LEDPanelPowerState)
+        return self.listen_for_speech()
+        #self.LEDPanelPowerState = False
+        #set_power_state(self.LEDPanelPowerState)
 
     def listen_for_speech(self):
         #Open stream
@@ -234,18 +224,13 @@ class VoiceController(object):
                 self.stream.close()
                 print ("Finished")
                 filename = self.save_speech(list(prev_audio) + audio2send)
-                speech_text = stt_google_wav(filename)
+                response = stt_google_wav(filename)
                 os.remove(filename)
-                # process speech here maybe?
-                if speech_text == "exit":
-                    print ("exiting")
-                    return
                 # Remove temp file. Comment line to review.
-                break
+                return response
             else:
                 prev_audio.append(cur_data)
         
-
     def save_speech(self, data):
         filename = 'output_'+str(int(time.time()))
         # writes data to WAV file
@@ -258,7 +243,31 @@ class VoiceController(object):
         wf.close()
         return filename + '.wav'
 
+    def get_LED_power_state(self)
+        return self.LEDPanelPowerState
+
+    def set_LED_power_state(self, powerstate)
+        self.LEDPanelPowerState = powerstate
+        set_power_state(powerstate)
+        return self.LEDPanelPowerState
 
 if __name__ == "__main__":
     vc = VoiceController()
-    vc.listen()
+    vc.set_display(LEDdisplay())
+    response = vc.listen()
+
+    for result in response.results:
+        for alternative in result.alternatives:
+            print('=' * 20)
+            print('transcript: ' + alternative.transcript)
+            print('confidence: ' + str(alternative.confidence))
+            if alternative.transcript == "exit":
+                return "exit"
+            if alternative.transcript == "light on":
+                return "light on"
+            if alternative.transcript == "lights on":
+                return "light on"
+            if alternative.transcript == "light off":
+                return "light off"
+            if alternative.transcript == "lights off":
+                return "light off"
