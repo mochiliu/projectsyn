@@ -104,7 +104,7 @@ class VoiceController(object):
         self.LEDPanelPowerState = False
         self.disp = None
 
-    def set_display(self, disp)
+    def set_display(self, disp):
         self.disp = disp
 
     def stop(self):
@@ -179,7 +179,6 @@ class VoiceController(object):
                 # noisy block
                 self.quietcount = 0
                 self.noisycount += 1
-                
             else:            
                 # quiet block.
                 if 1 <= self.noisycount <= MAX_TAP_BLOCKS:
@@ -243,10 +242,10 @@ class VoiceController(object):
         wf.close()
         return filename + '.wav'
 
-    def get_LED_power_state(self)
+    def get_LED_power_state(self):
         return self.LEDPanelPowerState
 
-    def set_LED_power_state(self, powerstate)
+    def set_LED_power_state(self, powerstate):
         self.LEDPanelPowerState = powerstate
         set_power_state(powerstate)
         return self.LEDPanelPowerState
@@ -262,12 +261,12 @@ if __name__ == "__main__":
             print('transcript: ' + alternative.transcript)
             print('confidence: ' + str(alternative.confidence))
             if alternative.transcript == "exit":
-                return "exit"
+                print("exit")
             if alternative.transcript == "light on":
-                return "light on"
+                print("light on")
             if alternative.transcript == "lights on":
-                return "light on"
+                print("light on")
             if alternative.transcript == "light off":
-                return "light off"
+                print("light off")
             if alternative.transcript == "lights off":
-                return "light off"
+                print("light off")

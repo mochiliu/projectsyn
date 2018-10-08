@@ -1,6 +1,7 @@
 import numpy as np
 from neopixel import *
 from PIL import Image
+import ctypes
 import os
 
 class LEDdisplay:
@@ -22,19 +23,21 @@ class LEDdisplay:
 		self.strip.begin()
 
 	def set_from_array(self, linear_array):
-		try:
-			mat = np.reshape(linear_array, (30,30,3));
-			mat = mat.astype(int)
+		#try:
+			mat = np.reshape(linear_array, (30,30,3))
 			mat = np.fliplr(mat)
 			# mat = np.rot90(mat,3)
 			mat[range(mat.shape[0])[::2], :, :] = np.fliplr(mat[range(mat.shape[0])[::2], :, :])
+			mat.astype(int)
 			for r in range(mat.shape[0]):
 				for c in range(mat.shape[1]):
 					i = r * mat.shape[1] + c
-					self.strip.setPixelColorRGB(i, *mat[r, c, :])
+					pixel_color = mat[r, c, :]
+					pixel_color = pixel_color.tolist()
+					self.strip.setPixelColorRGB(i, *pixel_color)
 			self.strip.show()
-		except:
-			print('error setting strip')
+		#except:
+			#print('error setting strip')
 
 	def set_from_image_path(self, imagepath):
 		loaded_image = np.reshape(np.array(Image.open(imagepath)),[2700])
@@ -45,4 +48,4 @@ class LEDdisplay:
 		self.set_from_array(testarray)
 
 if __name__ == '__main__':
-	LEDdisplay().set_from_image_path("listening.bmp")
+	LEDdisplay().test()
