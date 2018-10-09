@@ -205,7 +205,7 @@ class VoiceController(object):
     def parse_response(self, response):
         parsed_response = []
         for result in response.results:
-            parsed_response.append(result.alternatives[0].transcript)
+            parsed_response.append(result.alternatives[0].transcript.lower())
         return parsed_response
                 
     def save_speech(self, data):
