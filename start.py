@@ -50,7 +50,7 @@ def main_fxn():
         if vc.listen_for_tap():
             # a double tap is detected! listen for speech
             vc.stop()
-            powerstate = not light_state == light_state.Poweroff
+            powerstate = not light_state == light_states.PowerOff
             powerstate = display_listening_indicator(powerstate, disp)
             light_state = light_states.ListeningForSpeech
             
@@ -62,7 +62,8 @@ def main_fxn():
             command_word_found = False
             if response == []:
                 # no words detected, turn the panel off
-                light_state = light_state.Poweroff
+                set_power_state(False)
+                light_state = light_state.PowerOff
                 command_word_found = True
             for word in response:
                 if word == 'quit' or word == 'exit':
