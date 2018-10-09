@@ -7,8 +7,8 @@ import io
 from collections import deque
 import os
 import time
-import RPi.GPIO as GPIO
-from display import LEDdisplay
+#import RPi.GPIO as GPIO
+#from display import LEDdisplay
 from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
@@ -36,22 +36,6 @@ MAX_TAP_BLOCKS = 0.15/INPUT_BLOCK_TIME
 # the number of seconds the second tap has to be in for it to be double tap
 MIN_DOUBLETAP_TIMING = 0.5/INPUT_BLOCK_TIME
 
-
-def set_power_state(powerstate):
-    # set the power state of the light panel, to save energy and reduce excess noise
-    GPIO.setmode(GPIO.BCM)
-    powersupplypin = 2
-    GPIO.setup(powersupplypin,GPIO.OUT)
-    GPIO.output(powersupplypin,powerstate)
-
-def display_listening_indicator(powerstate, disp):
-    #display on the LED panel the listening indicator
-    if not powerstate:
-        #turn the LED panel ON if it is not already on
-            powerstate = True
-            set_power_state(powerstate) 
-    disp.set_from_image_path("listening.bmp")
-    return powerstate
 
 def get_rms( block ):
     # RMS amplitude is defined as the square root of the 
@@ -101,11 +85,7 @@ class VoiceController(object):
         self.errorcount = 0
         self.lasttap = MIN_DOUBLETAP_TIMING+1 #how many chunks since the last tap
         self.doubleTap = False
-        self.LEDPanelPowerState = False
-        self.disp = None
 
-    def set_display(self, disp):
-        self.disp = disp
 
     def stop(self):
         self.stream.close()
@@ -115,13 +95,11 @@ class VoiceController(object):
         for i in range( self.pa.get_device_count() ):     
             devinfo = self.pa.get_device_info_by_index(i)   
             print( "Device %d: %s"%(i,devinfo["name"]) )
-
             for keyword in ["mic","input"]:
                 if keyword in devinfo["name"].lower():
                     print( "Found an input: device %d - %s"%(i,devinfo["name"]) )
                     device_index = i
                     return device_index
-
         if device_index == None:
             print( "No preferred input found; using default input device." )
         return device_index
@@ -134,7 +112,8 @@ class VoiceController(object):
                                  input = True,
                                  input_device_index = device_index,
                                  frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
-        return stream
+        self.doubleTap = False
+        self.stream = stream
 
     def open_speech_mic_stream( self ):
         device_index = self.find_input_device()
@@ -144,7 +123,7 @@ class VoiceController(object):
                                  input = True,
                                  input_device_index = device_index,
                                  frames_per_buffer = CHUNK)
-        return stream
+        self.stream = stream
 
     def tapDetected(self): #One tap DETECTED
         print ("tapped")
@@ -161,44 +140,35 @@ class VoiceController(object):
     def resetDoubleTap(self):
         self.doubleTap = False
 
-    def listen(self):
-        self.doubleTap = False
-        self.stream = self.open_tap_mic_stream()
-        while self.doubleTap == False:
-    #        try:
-            block = self.stream.read(INPUT_FRAMES_PER_BLOCK, exception_on_overflow = False)
-    #        except:
-                # dammit. 
-    #            self.errorcount += 1
-    #            print( "(%d) Error recording"%(self.errorcount) )
-    #            self.noisycount = 1
-    #            return
+    def listen_for_tap(self):
+#        try:
+        block = self.stream.read(INPUT_FRAMES_PER_BLOCK, exception_on_overflow = False)
+#        except:
+#            # dammit. 
+#            self.errorcount += 1
+#            print( "(%d) Error recording"%(self.errorcount) )
+#            self.noisycount = 1
+#            return False
 
-            amplitude = get_rms( block )
-            if amplitude > self.tap_threshold:
-                # noisy block
-                self.quietcount = 0
-                self.noisycount += 1
-            else:            
-                # quiet block.
-                if 1 <= self.noisycount <= MAX_TAP_BLOCKS:
-                    self.tapDetected()
+        amplitude = get_rms( block )
+        if amplitude > self.tap_threshold:
+            # noisy block
+            self.quietcount = 0
+            self.noisycount += 1
+        else:            
+            # quiet block.
+            if 1 <= self.noisycount <= MAX_TAP_BLOCKS:
+                self.tapDetected()
 
-                self.noisycount = 0
-                self.quietcount += 1
-
-            if self.lasttap <= MIN_DOUBLETAP_TIMING:
-                self.lasttap += 1
-        # double tap detected
-        self.stop()
-        self.LEDPanelPowerState = display_listening_indicator(self.LEDPanelPowerState, self.disp)
-        return self.listen_for_speech()
-        #self.LEDPanelPowerState = False
-        #set_power_state(self.LEDPanelPowerState)
+            self.noisycount = 0
+            self.quietcount += 1
+        if self.lasttap <= MIN_DOUBLETAP_TIMING:
+            self.lasttap += 1
+        return self.doubleTap
 
     def listen_for_speech(self):
         #Open stream
-        self.stream = self.open_speech_mic_stream()
+        self.open_speech_mic_stream()
         print ("* Listening mic. ")
         audio2send = []
         cur_data = ''  # current chunk  of audio data
@@ -220,16 +190,24 @@ class VoiceController(object):
                 audio2send.append(cur_data)
             elif (started is True):
                 self.stream.stop_stream()
-                self.stream.close()
+                self.stop()
                 print ("Finished")
                 filename = self.save_speech(list(prev_audio) + audio2send)
                 response = stt_google_wav(filename)
                 os.remove(filename)
                 # Remove temp file. Comment line to review.
-                return response
+                parsed_response = self.parse_response(response)
+                print(parsed_response)
+                return parsed_response
             else:
                 prev_audio.append(cur_data)
-        
+    
+    def parse_response(self, response):
+        parsed_response = []
+        for result in response.results:
+            parsed_response.append(result.alternative[0].transcript)
+        return parsed_response
+                
     def save_speech(self, data):
         filename = 'output_'+str(int(time.time()))
         # writes data to WAV file
@@ -242,31 +220,9 @@ class VoiceController(object):
         wf.close()
         return filename + '.wav'
 
-    def get_LED_power_state(self):
-        return self.LEDPanelPowerState
 
-    def set_LED_power_state(self, powerstate):
-        self.LEDPanelPowerState = powerstate
-        set_power_state(powerstate)
-        return self.LEDPanelPowerState
+#if __name__ == "__main__":
+#    vc = VoiceController()
+#    response = vc.listen()
 
-if __name__ == "__main__":
-    vc = VoiceController()
-    vc.set_display(LEDdisplay())
-    response = vc.listen()
 
-    for result in response.results:
-        for alternative in result.alternatives:
-            print('=' * 20)
-            print('transcript: ' + alternative.transcript)
-            print('confidence: ' + str(alternative.confidence))
-            if alternative.transcript == "exit":
-                print("exit")
-            if alternative.transcript == "light on":
-                print("light on")
-            if alternative.transcript == "lights on":
-                print("light on")
-            if alternative.transcript == "light off":
-                print("light off")
-            if alternative.transcript == "lights off":
-                print("light off")
