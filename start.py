@@ -43,7 +43,7 @@ def main_fxn():
     
     while True:
         # never stop doing the lights! lights or bust
-        if light_state == light_states.CyclingDisplay:
+        if light_state == light_states.CyclingSampleDisplay:
             print('to do')
             return 
         
