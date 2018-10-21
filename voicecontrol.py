@@ -12,6 +12,8 @@ import time
 from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
+#from clap import ClapAnalyzer
+
 
 client = speech.SpeechClient()
 LANG_CODE = 'en-US'  # Language to use

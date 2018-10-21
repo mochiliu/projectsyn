@@ -16,6 +16,7 @@ import shutil
 import copy
 
 #import matplotlib.pyplot as plt
+#from mpl_toolkits.mplot3d import Axes3D
 
 def geometric_median(X, eps=1e-2):
     y = np.mean(X, 0)
@@ -76,8 +77,8 @@ def NN(A, start):
 class ColorPDFLearner(object):
     def __init__(self):
         self.pca_pdf = True
-        self.color_resolution = 8
-        self.num_traing_imgs = 100
+        self.color_resolution = 16
+        self.num_traing_imgs = 20
         self.edge_pdf_limit = 0.3
 
     def learnword(self, search_term):
@@ -245,23 +246,24 @@ class ColorPDFLearner(object):
         return sampled_colors
 
 if __name__ == "__main__":
-    color_learner = ColorPDFLearner()
-#    ml_color = color_learner.maxlikelihoodcolor(['blue','teal'])
-#    print(ml_color)
-   
     number_of_samples = 20
-    sampled_colors = color_learner.samplemultiple('blue', number_of_samples)
+    words = ['red']
+    color_learner = ColorPDFLearner()
+    ml_color = color_learner.maxlikelihoodcolor(words)
+    print(ml_color)
+   
+    sampled_colors = color_learner.samplemultiple(words, number_of_samples)
     
-#    # plot the sampled points
-#    fig = plt.figure()
-#    ax = fig.add_subplot(111, projection='3d')
-#    for sample_index in range(number_of_samples):
-#        ax.scatter(sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index], c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
-#    ax.set_xlabel('Red')
-#    ax.set_ylabel('Green')
-#    ax.set_zlabel('Blue')
-#    plt.show()
-#
+    # plot the sampled points
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    for sample_index in range(number_of_samples):
+        ax.scatter(sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index], c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
+    ax.set_xlabel('Red')
+    ax.set_ylabel('Green')
+    ax.set_zlabel('Blue')
+    plt.show()
+
 #    # plot the sampled points in sorted order
 #    fig = plt.figure()
 #    ax = fig.add_subplot(111, projection='3d')
