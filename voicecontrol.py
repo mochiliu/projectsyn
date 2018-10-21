@@ -7,12 +7,10 @@ import io
 from collections import deque
 import os
 import time
-#import RPi.GPIO as GPIO
-#from display import LEDdisplay
 from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
-#from clap import ClapAnalyzer
+from clap import ClapAnalyzer
 
 
 client = speech.SpeechClient()
@@ -86,9 +84,26 @@ class VoiceController(object):
         self.quietcount = 0 
         self.errorcount = 0
         self.lasttap = MIN_DOUBLETAP_TIMING+1 #how many chunks since the last tap
-        self.doubleTap = False
+        self.clap_sequences_detected = False
+        self.clap_start_time = time.clock()
+        self.clap_analyzer = ClapAnalyzer(
+            note_lengths=[1./4, 1./8, 1./8, 1./4, 1./4],
+            deviation_threshold=0.1
+        )
+        self.clap_analyzer.on_clap_sequence(self.clapSequenceCallBack)
 
+    def clapSequenceCallBack(self):
+        print("clap sequence detected")
+        self.clap_sequences_detected = True
+        
+    def tapDetected(self): #One tap DETECTED
+        print ("tapped")
+        self.clap_analyzer.clap(time.clock() - self.clap_start_time)
 
+    def resetClapSequence(self):
+        self.clap_sequences_detected = False
+        self.clap_start_time = time.clock()
+        
     def stop(self):
         self.stream.close()
 
@@ -114,7 +129,8 @@ class VoiceController(object):
                                  input = True,
                                  input_device_index = device_index,
                                  frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
-        self.doubleTap = False
+        self.clap_sequences_detected = False
+        self.clap_start_time = time.clock()
         self.stream = stream
 
     def open_speech_mic_stream( self ):
@@ -127,20 +143,6 @@ class VoiceController(object):
                                  frames_per_buffer = CHUNK)
         self.stream = stream
 
-    def tapDetected(self): #One tap DETECTED
-        print ("tapped")
-        if self.lasttap <= MIN_DOUBLETAP_TIMING:
-            self.doubleTapDetected()
-        else:
-            self.lasttap = 0
-
-    def doubleTapDetected(self):
-        print ("double tap")
-        self.doubleTap = True
-        self.lastap = MIN_DOUBLETAP_TIMING+1
-
-    def resetDoubleTap(self):
-        self.doubleTap = False
 
     def listen_for_tap(self):
 #        try:
@@ -164,9 +166,8 @@ class VoiceController(object):
 
             self.noisycount = 0
             self.quietcount += 1
-        if self.lasttap <= MIN_DOUBLETAP_TIMING:
-            self.lasttap += 1
-        return self.doubleTap
+
+        return self.clap_sequences_detected
 
     def listen_for_speech(self):
         #Open stream
