@@ -8,8 +8,8 @@ class ClapAnalyzer:
         self.buffer_size = len(note_lengths)
         self.pattern = self.note_lengths_to_normalized_pauses(note_lengths)
         self.pattern_sum = sum(self.pattern)
-        self.min_pattern_time = .1 * self.pattern_sum  # min 100 ms between fastest clap in sequence
-        self.max_pattern_time = .5 * self.pattern_sum  # max 500 ms between fastest clap in sequence
+        self.min_pattern_time = .03 * self.pattern_sum  # min 100 ms between fastest clap in sequence
+        self.max_pattern_time = .7 * self.pattern_sum  # max 500 ms between fastest clap in sequence
         self.clap_times = [None] * self.buffer_size
         self.deviation_threshold = deviation_threshold
         self.current_index = 0
@@ -63,3 +63,21 @@ class ClapAnalyzer:
                 return  # clap sequence didn't match accurately enough with the pattern
         else:
             return  # clap sequence too short or too long
+     
+def clap_sequence_callback():
+    print('clap sequence detected')
+
+if __name__ == "__main__":
+#    clap_analyzer = ClapAnalyzer(
+#            note_lengths=[1./4, 1./8, 1./8, 1./4, 1./4],
+#            deviation_threshold=0.1)
+    clap_analyzer = ClapAnalyzer(
+        note_lengths=[1./4, 1./8, 1./8, 1./4, 1./4],
+        deviation_threshold=0.1)
+    clap_analyzer.on_clap_sequence(clap_sequence_callback)
+    clap_analyzer.clap(5.128252999999999)
+    clap_analyzer.clap(5.220829)
+    clap_analyzer.clap(5.267391999999999)
+    clap_analyzer.clap(5.323456)
+    clap_analyzer.clap(5.4150030000000005)
+    print('testdones')
