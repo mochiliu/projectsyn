@@ -21,6 +21,7 @@ CHUNK = 1024 #CHUNKS of bytes to read each time from mic for google cloud speech
 THRESHOLD = 3000  # The threshold intensity that defines silence
 SILENCE_LIMIT = 2  # Silence limit in seconds to stop the recording
 PREV_AUDIO = 0.5  #seconds of audo to prepend to the sending data
+MAX_RECORD_TIME = 15 # max seconds to record audio for speech detection
 
 INITIAL_TAP_THRESHOLD = 0.05
 FORMAT = pyaudio.paInt16 
@@ -33,8 +34,6 @@ OVERSENSITIVE = 15.0/INPUT_BLOCK_TIME
 UNDERSENSITIVE = 120.0/INPUT_BLOCK_TIME 
 # if the noise was longer than this many blocks, it's not a 'tap'
 MAX_TAP_BLOCKS = 0.15/INPUT_BLOCK_TIME
-# the number of seconds the second tap has to be in for it to be double tap
-MIN_DOUBLETAP_TIMING = 0.5/INPUT_BLOCK_TIME
 
 
 def get_rms( block ):
@@ -83,7 +82,6 @@ class VoiceController(object):
         self.noisycount = MAX_TAP_BLOCKS+1 
         self.quietcount = 0 
         self.errorcount = 0
-        self.lasttap = MIN_DOUBLETAP_TIMING+1 #how many chunks since the last tap
         self.clap_sequences_detected = False
         self.clap_start_time = time.clock()
         self.clap_analyzer = ClapAnalyzer(
@@ -181,7 +179,8 @@ class VoiceController(object):
         prev_audio = deque(maxlen=math.floor(PREV_AUDIO * rel))
         started = False
         response = []
-
+        start_time = None
+        
         while (True):
             cur_data = self.stream.read(CHUNK, exception_on_overflow = False)
             slid_win.append(math.sqrt(abs(audioop.avg(cur_data, 4))))
@@ -190,8 +189,9 @@ class VoiceController(object):
                 if(not started):
                     print ("Starting record of phrase")
                     started = True
+                    start_time = time.clock()
                 audio2send.append(cur_data)
-            elif (started is True):
+            elif (started is True or (time.clock() - start_time) > MAX_RECORD_TIME):
                 self.stream.stop_stream()
                 self.stop()
                 print ("Finished")
