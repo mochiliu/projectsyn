@@ -179,7 +179,7 @@ class VoiceController(object):
         prev_audio = deque(maxlen=math.floor(PREV_AUDIO * rel))
         started = False
         response = []
-        start_time = None
+        start_time = time.clock()
         
         while (True):
             cur_data = self.stream.read(CHUNK, exception_on_overflow = False)
