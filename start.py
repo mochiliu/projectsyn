@@ -103,13 +103,15 @@ def main_fxn(debug_param):
                 
             # learn words
             words_to_learn = words_to_learn + new_words_to_learn            
+            words_to_learn = list(set(words_to_learn))
+            new_words_to_learn = []
             vc.open_tap_mic_stream() #start the tap mic again
         
         # work in the background to learn new words
         if words_to_learn and (thread is None or not thread.is_alive()):
             # start learning a new word if we have words to learn and available resources
             word = words_to_learn.pop(0)
-            thread = threading.Thread(target=color_learner.learnword, args=word)
+            thread = threading.Thread(target=color_learner.learnword, args=[word])
             thread.daemon = True
             thread.start()
             
