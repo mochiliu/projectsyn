@@ -1,5 +1,5 @@
 import numpy as np
-#import time
+import time
 import RPi.GPIO as GPIO
 from enum import Enum
 from display import LEDdisplay
@@ -32,7 +32,10 @@ def display_listening_indicator(powerstate, disp):
 
 def main_fxn(debug_param):
     number_of_samples = 20
-
+    frame_period = 1.0 / 1 #1 hz
+    sample_number = 0
+    last_frame_time = time.clock()
+    
     light_state = light_states.PowerOff #start assuming we are off
     disp = LEDdisplay()
     vc = VoiceController()
@@ -41,13 +44,18 @@ def main_fxn(debug_param):
     ml_color = None
     words_to_learn = []
     thread = None
-    #sampled_colors = None
+    sampled_colors = None
     
     while True:
         # never stop doing the lights! lights or bust
         if light_state == light_states.CyclingSampleDisplay:
-            print('to do')
-            return 
+            current_time = time.clock()
+            if (current_time - last_frame_time > frame_period):
+                #time to update
+                sampled_color = sampled_colors[:,sample_number]
+                single_color_linear_array = np.tile(sampled_color, 900)
+                disp.set_from_array(single_color_linear_array)
+                sample_number = (sample_number + 1) // number_of_samples
         
         if vc.listen_for_tap() or debug_param:
             # a tap sequence is detected! listen for speech
@@ -103,7 +111,7 @@ def main_fxn(debug_param):
                 
             # learn words
             words_to_learn = words_to_learn + new_words_to_learn            
-            words_to_learn = list(set(words_to_learn))
+            words_to_learn = list(set(words_to_learn)) # only learn new words onces
             new_words_to_learn = []
             vc.open_tap_mic_stream() #start the tap mic again
         
