@@ -52,10 +52,12 @@ def main_fxn(debug_param):
             current_time = time.clock()
             if (current_time - last_frame_time > frame_period):
                 #time to update
-                sampled_color = sampled_colors[:,sample_number]
+                sampled_color = np.intc(sampled_colors[:,sample_number])
+                print(sampled_color)
                 single_color_linear_array = np.tile(sampled_color, 900)
                 disp.set_from_array(single_color_linear_array)
-                sample_number = (sample_number + 1) // number_of_samples
+                sample_number = (sample_number + 1) % number_of_samples
+                last_frame_time = current_time
         
         if vc.listen_for_tap() or debug_param:
             # a tap sequence is detected! listen for speech
@@ -124,4 +126,4 @@ def main_fxn(debug_param):
             thread.start()
             
 if __name__ == "__main__":
-    main_fxn(['red'])
+    main_fxn(['sample', 'red'])
