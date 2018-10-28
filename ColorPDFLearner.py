@@ -77,10 +77,41 @@ def NN(A, start):
 class ColorPDFLearner(object):
     def __init__(self):
         self.pca_pdf = True
-        self.color_resolution = 16
-        self.num_traing_imgs = 20
+        self.color_resolution = 8
+        self.num_traing_imgs = 100
         self.edge_pdf_limit = 0.3
 
+    def quicklearnword(self, search_term):
+        cwd = os.getcwd()
+        imagedir = os.path.join(cwd, 'images')
+        pdfdir = os.path.join(cwd, 'colorpdfs')
+        search_term_plus_color = search_term +' color'
+        response = google_images_download.googleimagesdownload()   #class instantiation
+        arguments = {"keywords":search_term_plus_color,"limit":1,"print_urls":True,"output_directory":imagedir,"no_numbering":True,"no_directory":True}   #creating list of arguments
+        paths = response.download(arguments)   #passing the arguments to the function
+        small_color_pdf = np.ones([256//self.color_resolution,256//self.color_resolution,256//self.color_resolution])
+        small_color_pdf = small_color_pdf / np.sum(small_color_pdf)       
+        
+        try:
+            paths = paths[search_term_plus_color]
+            path = paths[0]
+            #get geometic median pxel of the iimage
+            bgr_img = cv2.imread(path, cv2.IMREAD_COLOR)
+            bgr_img = cv2.resize(bgr_img, dsize=(50, 50), interpolation=cv2.INTER_NEAREST)
+            pixels = np.reshape(bgr_img, (-1,3))
+            median_pixel = geometric_median(pixels)
+            median_pixel = np.round(median_pixel)
+            median_pixel = np.array([median_pixel[2], median_pixel[1], median_pixel[0]],dtype=int)
+            small_color_pdf = np.zeros([256//self.color_resolution,256//self.color_resolution,256//self.color_resolution])
+            small_color_pdf[median_pixel[0]//self.color_resolution, median_pixel[1]//self.color_resolution, median_pixel[2]//self.color_resolution] = 1
+        except:
+            print('error quick learning')
+            
+        #save and clean up
+        save_path = os.path.join(pdfdir, search_term+'.npy')
+        np.save(save_path,small_color_pdf)
+        shutil.rmtree(imagedir)
+        
     def learnword(self, search_term):
         cwd = os.getcwd()
         imagedir = os.path.join(cwd, 'images')
@@ -179,45 +210,47 @@ class ColorPDFLearner(object):
     def getwordscdf(self, wordorwords):
         cwd = os.getcwd()
         pdfdir = os.path.join(cwd, 'colorpdfs')
-
+        words_to_learn = []
         if isinstance(wordorwords, (list,)):
             #many words
             small_color_pdf = np.ones([256//self.color_resolution,256//self.color_resolution,256//self.color_resolution])
             for word in wordorwords:
                 load_path = os.path.join(pdfdir, word+'.npy')
                 if not os.path.isfile(load_path):
-                    #this word is new, learn it first
+                    #this word is new, quick learn it first, real learn later
                     print('learning ' + word)
-                    self.learnword(word)
+                    self.quicklearnword(word)
+                    words_to_learn.append(word)
                 small_color_pdf = small_color_pdf * np.load(load_path) #load the cdf
             small_color_pdf = small_color_pdf / np.sum(small_color_pdf) #normalize
         else:
             #one word
             load_path = os.path.join(pdfdir, wordorwords+'.npy')
             if not os.path.isfile(load_path):
-                #this word is new, learn it first
+                #this word is new, quick learn it first, real learn later
                 print('learning ' + wordorwords)
-                self.learnword(word)
+                self.quicklearnword(word)
+                words_to_learn.append(word)
             small_color_pdf = np.load(load_path) #load the cdf
-        return small_color_pdf
+        return small_color_pdf, words_to_learn
     
     def maxlikelihoodcolor(self, wordorwords):
-        small_color_pdf = self.getwordscdf(wordorwords)
+        small_color_pdf, words_to_learn = self.getwordscdf(wordorwords)
         sampled_index = np.argmax(small_color_pdf)
         sampled_color = np.array(np.unravel_index(sampled_index, (256//self.color_resolution, 256//self.color_resolution, 256//self.color_resolution)))
         sampled_color = sampled_color * self.color_resolution
-        return sampled_color
+        return sampled_color, words_to_learn
 
     def sampleonce(self, wordorwords):
-        small_color_pdf = self.getwordscdf(wordorwords)
+        small_color_pdf, words_to_learn = self.getwordscdf(wordorwords)
         linearized_pdf_cumsum = np.cumsum(small_color_pdf.flatten())  #linearize pdf
         sampled_index = np.argmax(linearized_pdf_cumsum > np.random.uniform())
         sampled_color = np.array(np.unravel_index(sampled_index, (256//self.color_resolution, 256//self.color_resolution, 256//self.color_resolution)))
         sampled_color = sampled_color * self.color_resolution
-        return sampled_color
+        return sampled_color, words_to_learn
 
     def samplemultiple(self, wordorwords, number_of_samples):
-        small_color_pdf = self.getwordscdf(wordorwords)
+        small_color_pdf, words_to_learn = self.getwordscdf(wordorwords)
         sampled_colors = np.zeros([3,number_of_samples])
         linearized_pdf_cumsum = np.cumsum(small_color_pdf.flatten())  #linearize pdf
         for sample_index in range(number_of_samples):
@@ -225,10 +258,10 @@ class ColorPDFLearner(object):
             sampled_color = np.array(np.unravel_index(sampled_index, (256//self.color_resolution, 256//self.color_resolution, 256//self.color_resolution)))
             sampled_color = sampled_color * self.color_resolution
             sampled_colors[:,sample_index] = sampled_color
-        return sampled_colors
+        return sampled_colors, words_to_learn
     
     def sortedsamplemultiple(self, wordorwords, number_of_samples):
-        sampled_colors = self.samplemultiple(wordorwords, number_of_samples)
+        sampled_colors, words_to_learn = self.samplemultiple(wordorwords, number_of_samples)
         #calculated distances in color space
         A = np.zeros([number_of_samples,number_of_samples])
         #calculated distances in color space
@@ -243,26 +276,26 @@ class ColorPDFLearner(object):
         for sampled_color_index in path:
             sorted_colors[:,sorted_color_index] = sampled_colors[:,sampled_color_index]
             sorted_color_index += 1
-        return sampled_colors
+        return sampled_colors, words_to_learn
 
 if __name__ == "__main__":
     number_of_samples = 20
-    words = ['red']
+    words = ['yellow']
     color_learner = ColorPDFLearner()
     ml_color = color_learner.maxlikelihoodcolor(words)
     print(ml_color)
    
-    sampled_colors = color_learner.samplemultiple(words, number_of_samples)
-    
-    # plot the sampled points
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    for sample_index in range(number_of_samples):
-        ax.scatter(sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index], c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
-    ax.set_xlabel('Red')
-    ax.set_ylabel('Green')
-    ax.set_zlabel('Blue')
-    plt.show()
+#    sampled_colors = color_learner.samplemultiple(words, number_of_samples)
+#    
+#    # plot the sampled points
+#    fig = plt.figure()
+#    ax = fig.add_subplot(111, projection='3d')
+#    for sample_index in range(number_of_samples):
+#        ax.scatter(sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index], c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
+#    ax.set_xlabel('Red')
+#    ax.set_ylabel('Green')
+#    ax.set_zlabel('Blue')
+#    plt.show()
 
 #    # plot the sampled points in sorted order
 #    fig = plt.figure()

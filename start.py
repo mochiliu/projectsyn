@@ -5,7 +5,7 @@ from enum import Enum
 from display import LEDdisplay
 from voicecontrol import VoiceController
 from ColorPDFLearner import ColorPDFLearner
-
+import threading
 
 class light_states(Enum):
     PowerOff = 0
@@ -30,7 +30,7 @@ def display_listening_indicator(powerstate, disp):
     return powerstate
 
 
-def main_fxn():
+def main_fxn(debug_param):
     number_of_samples = 20
 
     light_state = light_states.PowerOff #start assuming we are off
@@ -39,6 +39,8 @@ def main_fxn():
     color_learner = ColorPDFLearner()
     vc.open_tap_mic_stream()
     ml_color = None
+    words_to_learn = []
+    thread = None
     #sampled_colors = None
     
     while True:
@@ -47,14 +49,18 @@ def main_fxn():
             print('to do')
             return 
         
-        if vc.listen_for_tap():
-            # a double tap is detected! listen for speech
+        if vc.listen_for_tap() or debug_param:
+            # a tap sequence is detected! listen for speech
             vc.stop()
             powerstate = not light_state == light_states.PowerOff
             powerstate = display_listening_indicator(powerstate, disp)
             light_state = light_states.ListeningForSpeech
             
-            response = vc.listen_for_speech()
+            if debug_param:
+                response = debug_param
+                debug_param = []
+            else:
+                response = vc.listen_for_speech()
             
             # process responses
             # check for exit commands
@@ -86,17 +92,26 @@ def main_fxn():
             if not command_word_found:
                 # assume just color words, do the normal ML calculations
                 light_state = light_state.ConstantMLDisplay
-                ml_color = color_learner.maxlikelihoodcolor(response)
+                ml_color, new_words_to_learn = color_learner.maxlikelihoodcolor(response)
                 single_color_linear_array = np.tile(ml_color, 900)
                 disp.set_from_array(single_color_linear_array)
                 
             elif light_state == light_state.CyclingSampleDisplay:
-                words = list( response[i] for i in range(command_index, len(response)))
-                sampled_colors = color_learner.samplemultiple(words, number_of_samples)
+                words = list( response[i] for i in range(command_index, len(response))) #get rid of words prior to command word
+                sampled_colors, new_words_to_learn = color_learner.samplemultiple(words, number_of_samples)
                 print(sampled_colors)
                 
-                
+            # learn words
+            words_to_learn = words_to_learn + new_words_to_learn            
             vc.open_tap_mic_stream() #start the tap mic again
+        
+        # work in the background to learn new words
+        if words_to_learn and (thread is None or not thread.is_alive()):
+            # start learning a new word if we have words to learn and available resources
+            word = words_to_learn.pop(0)
+            thread = threading.Thread(target=color_learner.learnword, args=word)
+            thread.daemon = True
+            thread.start()
             
 if __name__ == "__main__":
-    main_fxn()
+    main_fxn(['red'])
