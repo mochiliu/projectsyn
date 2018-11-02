@@ -9,7 +9,7 @@ class CyclingDisplay:
         self.frame_period = 1.0 / frame_rate 
         self.sampled_colors = sampled_colors
         self.number_of_samples = np.shape(sampled_colors)
-        self.number_of_samples = self.number_of_samples[0]
+        self.number_of_samples = self.number_of_samples[1]
         
     def start_cycling(self, running):
         self.stop_requested = False
