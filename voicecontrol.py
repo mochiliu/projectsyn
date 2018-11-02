@@ -86,7 +86,7 @@ class VoiceController(object):
         self.clap_start_time = time.clock()
         self.clap_analyzer = ClapAnalyzer(
             note_lengths=[1./4, 1./8, 1./8, 1./4, 1./4],
-            deviation_threshold=0.1
+            deviation_threshold=0.2
         )
         self.clap_analyzer.on_clap_sequence(self.clapSequenceCallBack)
 
@@ -95,8 +95,9 @@ class VoiceController(object):
         self.clap_sequences_detected = True
         
     def tapDetected(self): #One tap DETECTED
-        #print ("tapped")
-        self.clap_analyzer.clap(time.clock() - self.clap_start_time)
+        time_diff = time.clock() - self.clap_start_time
+        self.clap_analyzer.clap(time_diff)
+        #print('tap ' + str(time_diff))
 
     def resetClapSequence(self):
         self.clap_sequences_detected = False
