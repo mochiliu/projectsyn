@@ -73,11 +73,11 @@ if __name__ == "__main__":
 #            deviation_threshold=0.1)
     clap_analyzer = ClapAnalyzer(
         note_lengths=[1./4, 1./8, 1./8, 1./4, 1./4],
-        deviation_threshold=0.1)
+        deviation_threshold=0.2)
     clap_analyzer.on_clap_sequence(clap_sequence_callback)
-    clap_analyzer.clap(5.128252999999999)
-    clap_analyzer.clap(5.220829)
-    clap_analyzer.clap(5.267391999999999)
-    clap_analyzer.clap(5.323456)
-    clap_analyzer.clap(5.4150030000000005)
-    print('testdones')
+    clap_analyzer.clap(0.5988639999999998)
+    clap_analyzer.clap(0.6816079999999998)
+    clap_analyzer.clap(0.7371049999999997)
+    clap_analyzer.clap(0.7925519999999997)
+    clap_analyzer.clap(0.8724659999999993)
+    print('testdone')
