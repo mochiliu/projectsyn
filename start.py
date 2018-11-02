@@ -32,7 +32,7 @@ def display_listening_indicator(powerstate, disp):
 
 def main_fxn(debug_param):
     number_of_samples = 20
-    frame_rate = 1 #1 Hz
+    frame_rate = 10 #1 Hz
     
     light_state = light_states.PowerOff #start assuming we are off
     disp = LEDdisplay()
@@ -105,7 +105,7 @@ def main_fxn(debug_param):
                 print(sampled_colors)
                 cycling_diplay = CyclingDisplay(disp, frame_rate, sampled_colors)
                 running.set()
-                background_thread = threading.Thread(target=cycling_diplay.start_cycling, args=running)
+                background_thread = threading.Thread(target=cycling_diplay.start_cycling, args=[running])
                 background_thread.daemon = True
                 background_thread.start()     
             
@@ -124,5 +124,5 @@ def main_fxn(debug_param):
             background_thread.start()
             
 if __name__ == "__main__":
-    #main_fxn(['orange'])
-    main_fxn([])
+    main_fxn(['sample','orange'])
+    #main_fxn([])
