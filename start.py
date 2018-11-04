@@ -101,7 +101,7 @@ def main_fxn(debug_param):
                 
             elif light_state == light_state.CyclingSampleDisplay:
                 words = list( response[i] for i in range(command_index, len(response))) #get rid of words prior to command word
-                sampled_colors, new_words_to_learn = color_learner.samplemultiple(words, number_of_samples)
+                sampled_colors, new_words_to_learn = color_learner.sortedsamplemultiple(words, number_of_samples)
                 print(sampled_colors)
                 number_in_path = np.shape(sampled_colors)
                 number_in_path = number_in_path[1]

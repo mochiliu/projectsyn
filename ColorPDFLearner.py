@@ -89,7 +89,7 @@ def interp_path(sampled_colors, max_distance):
     red_path = np.interp(np.linspace(0,dis[-1],number_in_path), np.squeeze(dis), np.squeeze(sampled_colors[0,:]))
     green_path = np.interp(np.linspace(0,dis[-1],number_in_path), np.squeeze(dis), np.squeeze(sampled_colors[1,:]))
     blue_path = np.interp(np.linspace(0,dis[-1],number_in_path), np.squeeze(dis), np.squeeze(sampled_colors[2,:]))
-    new_path = np.transpose(np.vstack((red_path,green_path,blue_path)))
+    new_path = np.vstack((red_path,green_path,blue_path))
     return new_path
 
 class ColorPDFLearner(object):
