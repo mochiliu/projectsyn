@@ -103,12 +103,21 @@ def main_fxn(debug_param):
                 words = list( response[i] for i in range(command_index, len(response))) #get rid of words prior to command word
                 sampled_colors, new_words_to_learn = color_learner.samplemultiple(words, number_of_samples)
                 print(sampled_colors)
-                cycling_diplay = CyclingDisplay(disp, frame_rate, sampled_colors)
-                running.set()
-                background_thread = threading.Thread(target=cycling_diplay.start_cycling, args=[running])
-                background_thread.daemon = True
-                background_thread.start()     
-            
+                number_in_path = np.shape(sampled_colors)
+                number_in_path = number_in_path[1]
+                if number_in_path == 1:                    
+                    #there's only one color that is sampled, constantly display it
+                    light_state = light_state.ConstantMLDisplay
+                    single_color_linear_array = np.tile(sampled_colors, 900)
+                    disp.set_from_array(single_color_linear_array)
+                else:
+                    #if there are more than 1 color to display, go through them
+                    cycling_diplay = CyclingDisplay(disp, frame_rate, sampled_colors)
+                    running.set()
+                    background_thread = threading.Thread(target=cycling_diplay.start_cycling, args=[running])
+                    background_thread.daemon = True
+                    background_thread.start()
+
             # learn words
             words_to_learn = words_to_learn + new_words_to_learn            
             words_to_learn = list(set(words_to_learn)) # only learn new words onces
@@ -124,5 +133,5 @@ def main_fxn(debug_param):
             background_thread.start()
             
 if __name__ == "__main__":
-    main_fxn(['sample','orange'])
+    main_fxn(['sample','teal'])
     #main_fxn([])

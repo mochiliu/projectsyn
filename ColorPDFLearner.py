@@ -69,10 +69,28 @@ def NN(A, start):
     # The last element needs to be popped, because it is equal to inf.
     path.pop(n)
     # Because we want to return to start, we append this node as the last element.
-    #path.insert(n, start)
+    path.insert(n, start)
 
     return path
 
+def interp_path(sampled_colors, max_distance):
+    #this function interploates the sampled colors such that the transitions are smooth, each change less than max_distance
+    number_of_samples = np.shape(sampled_colors)
+    number_of_samples = number_of_samples[1]
+    dis = np.zeros([number_of_samples,1])
+    #print(sampled_colors)
+    for sample_index in range(number_of_samples-1):
+        #calculate the cumulative distance
+        dis[sample_index+1] = dis[sample_index] + euclidean(sampled_colors[:,sample_index],sampled_colors[:,sample_index+1])    
+        
+    number_in_path = int(np.ceil(dis[-1] / max_distance))
+    if number_in_path < 1:
+        number_in_path = 1
+    red_path = np.interp(np.linspace(0,dis[-1],number_in_path), np.squeeze(dis), np.squeeze(sampled_colors[0,:]))
+    green_path = np.interp(np.linspace(0,dis[-1],number_in_path), np.squeeze(dis), np.squeeze(sampled_colors[1,:]))
+    blue_path = np.interp(np.linspace(0,dis[-1],number_in_path), np.squeeze(dis), np.squeeze(sampled_colors[2,:]))
+    new_path = np.transpose(np.vstack((red_path,green_path,blue_path)))
+    return new_path
 
 class ColorPDFLearner(object):
     def __init__(self):
@@ -270,23 +288,25 @@ class ColorPDFLearner(object):
                 A[x,y] = euclidean(sampled_colors[:,x],sampled_colors[:,y])
         # Nearest neighbour algorithm
         path = NN(A, 0)
-        sorted_colors = sampled_colors.copy()
+        sorted_colors = np.zeros((3,number_of_samples+1))
         # Final array
         sorted_color_index = 0
         for sampled_color_index in path:
             sorted_colors[:,sorted_color_index] = sampled_colors[:,sampled_color_index]
             sorted_color_index += 1
+        sampled_colors = interp_path(sampled_colors, 5)
+        print(sampled_colors)
         return sampled_colors, words_to_learn
 
 if __name__ == "__main__":
     number_of_samples = 20
-    words = ['yellow']
+    words = ['brown']
     color_learner = ColorPDFLearner()
-    ml_color = color_learner.maxlikelihoodcolor(words)
-    print(ml_color)
-   
-#    sampled_colors = color_learner.samplemultiple(words, number_of_samples)
-#    
+#    ml_color = color_learner.maxlikelihoodcolor(words)
+#    print(ml_color)
+    #color_learner.learnword(words)
+    sampled_colors, words_to_learn = color_learner.sortedsamplemultiple(words, number_of_samples)
+#
 #    # plot the sampled points
 #    fig = plt.figure()
 #    ax = fig.add_subplot(111, projection='3d')
