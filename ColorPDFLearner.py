@@ -15,8 +15,8 @@ from sklearn.decomposition import PCA
 import shutil
 import copy
 
-#import matplotlib.pyplot as plt
-#from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 def geometric_median(X, eps=1e-2):
     y = np.mean(X, 0)
@@ -300,29 +300,31 @@ class ColorPDFLearner(object):
 
 if __name__ == "__main__":
     number_of_samples = 20
-    words = ['brown']
+    words = 'red'
     color_learner = ColorPDFLearner()
 #    ml_color = color_learner.maxlikelihoodcolor(words)
 #    print(ml_color)
-    #color_learner.learnword(words)
+    color_learner.learnword(words)
     sampled_colors, words_to_learn = color_learner.sortedsamplemultiple(words, number_of_samples)
 #
-#    # plot the sampled points
-#    fig = plt.figure()
-#    ax = fig.add_subplot(111, projection='3d')
-#    for sample_index in range(number_of_samples):
-#        ax.scatter(sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index], c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
-#    ax.set_xlabel('Red')
-#    ax.set_ylabel('Green')
-#    ax.set_zlabel('Blue')
-#    plt.show()
+    number_of_samples = np.shape(sampled_colors)
+    number_of_samples = number_of_samples[1]
+    # plot the sampled points
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    for sample_index in range(number_of_samples):
+        ax.scatter(sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index], c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
+    ax.set_xlabel('Red')
+    ax.set_ylabel('Green')
+    ax.set_zlabel('Blue')
+    plt.show()
 
-#    # plot the sampled points in sorted order
-#    fig = plt.figure()
-#    ax = fig.add_subplot(111, projection='3d')
-#    for sample_index in range(number_of_samples):
-#        ax.scatter(sample_index, sample_index, sample_index, c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
-#    ax.set_xlabel('Red')
-#    ax.set_ylabel('Green')
-#    ax.set_zlabel('Blue')
-#    plt.show()
+    # plot the sampled points in sorted order
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    for sample_index in range(number_of_samples):
+        ax.scatter(sample_index, sample_index, sample_index, c=np.array([sampled_colors[0,sample_index], sampled_colors[1,sample_index], sampled_colors[2,sample_index]])/255)
+    ax.set_xlabel('Red')
+    ax.set_ylabel('Green')
+    ax.set_zlabel('Blue')
+    plt.show()
