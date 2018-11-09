@@ -51,26 +51,21 @@ def parse_response(response, preloaded_keywords):
         for alternative in result.alternatives:
             potential_split_result = []
             split_results = alternative.transcript.split(' ')
+            for split_result in split_results:
+                lowercase_split_result = split_result.lower()
+                potential_split_result.append(lowercase_split_result)
+                if lowercase_split_result in preloaded_keywords:
+                    break_flag = True
             if not best_split_result:
                 #this is the most likely alternative
-                for split_result in split_results:
-                    lowercase_split_result = split_result.lower()
-                    potential_split_result.append(lowercase_split_result)
-                    if lowercase_split_result in preloaded_keywords:
-                        break_flag = True
                 best_split_result = potential_split_result.copy()
-            else:
-                #there are other alternatives available
-                for split_result in split_results:
-                    lowercase_split_result = split_result.lower()
-                    if lowercase_split_result in preloaded_keywords:
-                        break_flag = True
-                    potential_split_result.append(lowercase_split_result)
+
             if break_flag:
                 # a keyword is detected, use this alternative, skip the rest
-                parsed_response = parsed_response + potential_split_result
                 break # go to the next result
-        if not break_flag:
+        if break_flag:
+            parsed_response = parsed_response + potential_split_result
+        else:
             parsed_response = parsed_response + best_split_result
         
     return parsed_response
@@ -184,3 +179,10 @@ def main_fxn(debug_param):
 if __name__ == "__main__":
     main_fxn(['sample','blue'])
     #main_fxn([])
+#    
+#results {
+#  alternatives {
+#    transcript: "Orange"
+#    confidence: 0.9750022888183594
+#  }
+#}
