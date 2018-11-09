@@ -44,11 +44,12 @@ def parse_response(response, preloaded_keywords):
     # parses through the response from google cloud voice to consider alternatives
     # take the most likely alternative unless we notice key words we already have
     parsed_response = []
+    print(response)
     for result in response.results:
         best_split_result = []
+        break_flag = False
         for alternative in result.alternatives:
             potential_split_result = []
-            break_flag = False
             split_results = alternative.transcript.split(' ')
             if not best_split_result:
                 #this is the most likely alternative
@@ -57,7 +58,7 @@ def parse_response(response, preloaded_keywords):
                     potential_split_result.append(lowercase_split_result)
                     if lowercase_split_result in preloaded_keywords:
                         break_flag = True
-                    best_split_result = potential_split_result.copy
+                best_split_result = potential_split_result.copy()
             else:
                 #there are other alternatives available
                 for split_result in split_results:
@@ -69,8 +70,8 @@ def parse_response(response, preloaded_keywords):
                 # a keyword is detected, use this alternative, skip the rest
                 parsed_response = parsed_response + potential_split_result
                 break # go to the next result
-        
-        parsed_response = parsed_response + best_split_result
+        if not break_flag:
+            parsed_response = parsed_response + best_split_result
         
     return parsed_response
     
