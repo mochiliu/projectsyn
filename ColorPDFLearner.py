@@ -15,8 +15,8 @@ from sklearn.decomposition import PCA
 import shutil
 import copy
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+#import matplotlib.pyplot as plt
+#from mpl_toolkits.mplot3d import Axes3D
 
 def geometric_median(X, eps=1e-2):
     y = np.mean(X, 0)

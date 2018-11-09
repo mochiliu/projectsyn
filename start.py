@@ -133,5 +133,5 @@ def main_fxn(debug_param):
             background_thread.start()
             
 if __name__ == "__main__":
-    main_fxn(['sample','red'])
+    main_fxn(['sample','blue'])
     #main_fxn([])

@@ -55,7 +55,7 @@ class LEDdisplay:
 					i = r * mat.shape[1] + c
 					pixel_color = mat[r, c, :]
 					if gamma_correct:
-						gamma_correct_pixel_color(pixel_color, self.LUT)
+						pixel_color = gamma_correct_pixel_color(pixel_color, self.LUT)
 					pixel_color = pixel_color.tolist()
 					self.strip.setPixelColorRGB(i, *pixel_color)
 			self.strip.show()
