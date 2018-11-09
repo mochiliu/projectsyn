@@ -200,20 +200,10 @@ class VoiceController(object):
                 response = stt_google_wav(filename)
                 os.remove(filename)
                 # Remove temp file. Comment line to review.
-                parsed_response = self.parse_response(response)
-                print(parsed_response)
-                return parsed_response
+                return response
             else:
                 prev_audio.append(cur_data)
     
-    def parse_response(self, response):
-        parsed_response = []
-        for result in response.results:
-            split_results = result.alternatives[0].transcript.split(' ')
-            for split_result in split_results:
-                parsed_response.append(split_result.lower())
-        return parsed_response
-                
     def save_speech(self, data):
         filename = 'output_'+str(int(time.time()))
         # writes data to WAV file

@@ -6,6 +6,7 @@ from voicecontrol import VoiceController
 from ColorPDFLearner import ColorPDFLearner
 from CyclingDisplay import CyclingDisplay
 import threading
+import os
 
 class light_states(Enum):
     PowerOff = 0
@@ -29,7 +30,50 @@ def display_listening_indicator(powerstate, disp):
     disp.set_from_image_path("listening.bmp")
     return powerstate
 
+def get_preloaded_keywords():
+    keywords = ['quit','exit','off','sample']
+    cwd = os.getcwd()
+    pdfdir = os.path.join(cwd, 'colorpdfs')
+    filenames = os.listdir(pdfdir)
+    for names in filenames:
+        if names.endswith(".npy"):
+            keywords.append(os.path.splitext(names)[0])
+    return keywords
 
+def parse_response(response, preloaded_keywords):
+    # parses through the response from google cloud voice to consider alternatives
+    # take the most likely alternative unless we notice key words we already have
+    parsed_response = []
+    for result in response.results:
+        best_split_result = []
+        for alternative in result.alternatives:
+            potential_split_result = []
+            break_flag = False
+            split_results = alternative.transcript.split(' ')
+            if not best_split_result:
+                #this is the most likely alternative
+                for split_result in split_results:
+                    lowercase_split_result = split_result.lower()
+                    potential_split_result.append(lowercase_split_result)
+                    if lowercase_split_result in preloaded_keywords:
+                        break_flag = True
+                    best_split_result = potential_split_result.copy
+            else:
+                #there are other alternatives available
+                for split_result in split_results:
+                    lowercase_split_result = split_result.lower()
+                    if lowercase_split_result in preloaded_keywords:
+                        break_flag = True
+                    potential_split_result.append(lowercase_split_result)
+            if break_flag:
+                # a keyword is detected, use this alternative, skip the rest
+                parsed_response = parsed_response + potential_split_result
+                break # go to the next result
+        
+        parsed_response = parsed_response + best_split_result
+        
+    return parsed_response
+    
 def main_fxn(debug_param):
     number_of_samples = 50
     frame_rate = 10 #1 Hz
@@ -60,10 +104,14 @@ def main_fxn(debug_param):
             light_state = light_states.ListeningForSpeech
             
             if debug_param:
+                #we are debugging commands, skip voice input
                 response = debug_param
                 debug_param = []
             else:
                 response = vc.listen_for_speech()
+                response = parse_response(response, get_preloaded_keywords())
+            
+            print(response)
             
             # process responses
             # check for exit commands
