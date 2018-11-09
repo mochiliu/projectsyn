@@ -31,7 +31,7 @@ def display_listening_indicator(powerstate, disp):
 
 
 def main_fxn(debug_param):
-    number_of_samples = 20
+    number_of_samples = 50
     frame_rate = 10 #1 Hz
     
     light_state = light_states.PowerOff #start assuming we are off
@@ -133,5 +133,5 @@ def main_fxn(debug_param):
             background_thread.start()
             
 if __name__ == "__main__":
-    main_fxn(['sample','teal'])
+    main_fxn(['sample','red'])
     #main_fxn([])

@@ -20,7 +20,7 @@ class CyclingDisplay:
             if (current_time - last_frame_time > self.frame_period):
                 #time to update
                 sampled_color = np.intc(self.sampled_colors[:,sample_number])
-                print(sampled_color)
+                #print(sampled_color)
                 single_color_linear_array = np.tile(sampled_color, 900)
                 self.disp.set_from_array(single_color_linear_array)
                 sample_number = (sample_number + 1) % self.number_of_samples
