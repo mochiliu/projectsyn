@@ -59,7 +59,6 @@ def parse_response(response, preloaded_keywords):
             if not best_split_result:
                 #this is the most likely alternative
                 best_split_result = potential_split_result.copy()
-
             if break_flag:
                 # a keyword is detected, use this alternative, skip the rest
                 break # go to the next result
@@ -67,7 +66,6 @@ def parse_response(response, preloaded_keywords):
             parsed_response = parsed_response + potential_split_result
         else:
             parsed_response = parsed_response + best_split_result
-        
     return parsed_response
     
 def main_fxn(debug_param):
@@ -164,7 +162,7 @@ def main_fxn(debug_param):
 
             # learn words
             words_to_learn = words_to_learn + new_words_to_learn            
-            words_to_learn = list(set(words_to_learn)) # only learn new words onces
+            words_to_learn = list(set(words_to_learn)) # only learn new words once
             new_words_to_learn = []
             vc.open_tap_mic_stream() #start the tap mic again
         
@@ -177,12 +175,6 @@ def main_fxn(debug_param):
             background_thread.start()
             
 if __name__ == "__main__":
-    main_fxn(['sample','blue'])
+    main_fxn(['Red', 'Orange', 'Yellow', 'Green', 'Cyan', 'Blue', 'Indigo', 'Violet', 'Purple', 'Magenta', 'Pink', 'Brown', 'White', 'Gray', 'Black', 'Teal'])
     #main_fxn([])
-#    
-#results {
-#  alternatives {
-#    transcript: "Orange"
-#    confidence: 0.9750022888183594
-#  }
-#}
+
