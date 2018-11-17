@@ -128,25 +128,47 @@ class GameOfLife:
         self.frame_period = 1.0 / frame_rate 
         self.N = 30
         self.grid = randomGrid(self.N)
+        self.nextgrid = update(self.grid)
+        self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
+        self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
+        self.interp_frame_count = 10
         
     def start_game(self, running):
         self.stop_requested = False
+        
+        self.nextgrid = update(self.grid)
+        current_interpframe = 0
+        
         last_frame_time = time.clock()
         while running.is_set():
             current_time = time.clock()
             if (current_time - last_frame_time > self.frame_period):
                 #time to update
-                single_color_linear_array =  grid_to_linear_color_array(self.grid)
+                if current_interpframe >= self.interp_frame_count:
+                    #get the next cycle of the game
+                    self.grid = self.nextgrid
+                    self.nextgrid = update(self.grid)
+                    self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
+                    self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
+                    single_color_linear_array =  self.grid_linear_color_array
+                    current_interpframe = 0
+                else:
+                    #interpolate between the two grids
+                    interpolation_ratio = current_interpframe / self.interp_frame_count
+                    grid_interp_array = (1-interpolation_ratio) * self.grid_linear_color_array
+                    next_grid_interp_array = interpolation_ratio * self.grid_linear_color_array
+                    single_color_linear_array =  np.intc(grid_interp_array + next_grid_interp_array)
+                
                 self.disp.set_from_array(single_color_linear_array)
-                self.grid = update(self.grid)
                 last_frame_time = current_time
+                current_interpframe += 1
                 
                 
 # call main 
 if __name__ == '__main__': 
     running = threading.Event()
     disp = LEDdisplay()
-    game = GameOfLife(disp,1)
+    game = GameOfLife(disp,10)
     running.set()
     game.start_game(running)
     
