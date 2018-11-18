@@ -5,6 +5,7 @@ from display import LEDdisplay
 from voicecontrol import VoiceController
 from ColorPDFLearner import ColorPDFLearner
 from CyclingDisplay import CyclingDisplay
+from GameOfLife import GameOfLife
 import threading
 import os
 
@@ -13,6 +14,7 @@ class light_states(Enum):
     ListeningForSpeech = 1
     ConstantMLDisplay = 2
     CyclingSampleDisplay = 3
+    PlayingGameOfLife = 4
 
 def set_power_state(powerstate):
     # set the power state of the light panel, to save energy and reduce excess noise
@@ -31,7 +33,7 @@ def display_listening_indicator(powerstate, disp):
     return powerstate
 
 def get_preloaded_keywords():
-    keywords = ['quit','exit','off','sample']
+    keywords = ['quit','exit','off','sample', 'life']
     cwd = os.getcwd()
     pdfdir = os.path.join(cwd, 'colorpdfs')
     filenames = os.listdir(pdfdir)
@@ -89,7 +91,7 @@ def main_fxn(debug_param):
         if vc.listen_for_tap() or debug_param:
             # a tap sequence is detected! listen for speech
             vc.stop()
-            if light_state == light_state.CyclingSampleDisplay:
+            if light_state == light_states.CyclingSampleDisplay or light_state == light_states.PlayingGameOfLife:
                 # we are still runing the background changing color process, end it
                 running.clear()
                 
@@ -114,7 +116,7 @@ def main_fxn(debug_param):
             if response == []:
                 # no words detected, turn the panel off
                 set_power_state(False)
-                light_state = light_state.PowerOff
+                light_state = light_states.PowerOff
                 command_word_found = True
             for word in response:
                 if word == 'quit' or word == 'exit':
@@ -123,25 +125,29 @@ def main_fxn(debug_param):
                     return
                 elif word == 'off':
                     set_power_state(False)
-                    light_state = light_state.Poweroff
+                    light_state = light_states.Poweroff
                     command_word_found = True
                     break
                 elif word == 'sample':
                     if not command_index == len(response):
                         #command is the last word dont count
-                        light_state = light_state.CyclingSampleDisplay
+                        light_state = light_states.CyclingSampleDisplay
                         command_word_found = True
                         break
+                elif word == 'life':
+                    light_state = light_states.PlayingGameOfLife
+                    command_word_found = True            
+                    break
                 command_index += 1
                 
             if not command_word_found:
                 # assume just color words, do the normal ML calculations
-                light_state = light_state.ConstantMLDisplay
+                light_state = light_states.ConstantMLDisplay
                 ml_color, new_words_to_learn = color_learner.maxlikelihoodcolor(response)
                 single_color_linear_array = np.tile(ml_color, 900)
                 disp.set_from_array(single_color_linear_array)
                 
-            elif light_state == light_state.CyclingSampleDisplay:
+            elif light_state == light_states.CyclingSampleDisplay:
                 words = list( response[i] for i in range(command_index, len(response))) #get rid of words prior to command word
                 sampled_colors, new_words_to_learn = color_learner.sortedsamplemultiple(words, number_of_samples)
                 print(sampled_colors)
@@ -149,7 +155,7 @@ def main_fxn(debug_param):
                 number_in_path = number_in_path[1]
                 if number_in_path == 1:                    
                     #there's only one color that is sampled, constantly display it
-                    light_state = light_state.ConstantMLDisplay
+                    light_state = light_states.ConstantMLDisplay
                     single_color_linear_array = np.tile(sampled_colors, 900)
                     disp.set_from_array(single_color_linear_array)
                 else:
@@ -159,6 +165,12 @@ def main_fxn(debug_param):
                     background_thread = threading.Thread(target=cycling_diplay.start_cycling, args=[running])
                     background_thread.daemon = True
                     background_thread.start()
+            elif light_state == light_states.PlayingGameOfLife:
+                game_of_life = GameOfLife(disp, frame_rate)
+                running.set()
+                background_thread = threading.Thread(target=game_of_life.start_game, args=[running])
+                background_thread.daemon = True
+                background_thread.start()
 
             # learn words
             words_to_learn = words_to_learn + new_words_to_learn            
@@ -175,6 +187,7 @@ def main_fxn(debug_param):
             background_thread.start()
             
 if __name__ == "__main__":
-    main_fxn(['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'indigo', 'violet', 'purple', 'magenta', 'pink', 'brown', 'white', 'gray', 'black', 'teal'])
+    #main_fxn(['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'indigo', 'violet', 'purple', 'magenta', 'pink', 'brown', 'white', 'gray', 'black', 'teal'])
+    main_fxn(['life'])
     #main_fxn([])
 
