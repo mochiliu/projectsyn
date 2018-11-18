@@ -119,8 +119,8 @@ def update(grid):
                 if total == 3: 
                     old_colors = eight_neighbors[nonzero_array]
                     newGrid[i, j] = get_new_color(old_colors,5)
-    grid[:] = newGrid[:] 
-    return grid
+    
+    return newGrid
 
 class GameOfLife:
     def __init__(self, disp, frame_rate):
@@ -131,12 +131,10 @@ class GameOfLife:
         self.nextgrid = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-        self.interp_frame_count = 10
+        self.interp_frame_count = 5
         
     def start_game(self, running):
         self.stop_requested = False
-        
-        self.nextgrid = update(self.grid)
         current_interpframe = 0
         
         last_frame_time = time.clock()
@@ -146,19 +144,20 @@ class GameOfLife:
                 #time to update
                 if current_interpframe >= self.interp_frame_count:
                     #get the next cycle of the game
-                    self.grid = self.nextgrid
+                    self.grid = self.nextgrid.copy()
                     self.nextgrid = update(self.grid)
                     self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
                     self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-                    single_color_linear_array =  self.grid_linear_color_array
+                    single_color_linear_array = self.grid_linear_color_array.copy()
                     current_interpframe = 0
+                    #print('next cycle')
                 else:
                     #interpolate between the two grids
                     interpolation_ratio = current_interpframe / self.interp_frame_count
                     grid_interp_array = (1-interpolation_ratio) * self.grid_linear_color_array
-                    next_grid_interp_array = interpolation_ratio * self.grid_linear_color_array
-                    single_color_linear_array =  np.intc(grid_interp_array + next_grid_interp_array)
-                
+                    next_grid_interp_array = interpolation_ratio * self.next_grid_linear_color_array
+                    single_color_linear_array = np.intc(grid_interp_array + next_grid_interp_array)
+                    
                 self.disp.set_from_array(single_color_linear_array)
                 last_frame_time = current_time
                 current_interpframe += 1

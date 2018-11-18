@@ -175,6 +175,6 @@ def main_fxn(debug_param):
             background_thread.start()
             
 if __name__ == "__main__":
-    main_fxn(['Red', 'Orange', 'Yellow', 'Green', 'Cyan', 'Blue', 'Indigo', 'Violet', 'Purple', 'Magenta', 'Pink', 'Brown', 'White', 'Gray', 'Black', 'Teal'])
+    main_fxn(['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'indigo', 'violet', 'purple', 'magenta', 'pink', 'brown', 'white', 'gray', 'black', 'teal'])
     #main_fxn([])
 
