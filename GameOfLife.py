@@ -96,30 +96,36 @@ def update(grid):
     # copy grid since we require 8 neighbors 
     # for calculation and we go line by line 
     N = len(grid)
+    chance_of_glider = 0.05
+    threshold_for_adding_glider = 0.1
     
     newGrid = grid.copy() 
-    for i in range(N): 
-        for j in range(N): 
-            # compute 8-neghbor sum 
-            # using toroidal boundary conditions - x and y wrap around 
-            # so that the simulaton takes place on a toroidal surface. 
-            eight_neighbors = np.array([ grid[i, (j-1)%N], grid[i, (j+1)%N],
-            						grid[(i-1)%N, j], grid[(i+1)%N, j],
-            						grid[(i-1)%N, (j-1)%N], grid[(i-1)%N, (j+1)%N],
-            						grid[(i+1)%N, (j-1)%N], grid[(i+1)%N, (j+1)%N] ]) 
     
-            nonzero_array = np.nonzero(eight_neighbors)[0]
-            total = len(nonzero_array)
-            # apply Conway's rules 
-            if grid[i, j] > 0: 
-                #cell currently alive
-                if (total < 2) or (total > 3): 
-                    newGrid[i, j] = 0
-            else: 
-                #cell currently dead
-                if total == 3: 
-                    old_colors = eight_neighbors[nonzero_array]
-                    newGrid[i, j] = get_new_color(old_colors, np.random.uniform(low=0, high=10))
+    if np.count_nonzero(grid) / (N*N) < threshold_for_adding_glider and np.random.uniform() < chance_of_glider:
+        addGlider(np.random.randint(N-3), np.random.randint(N-3), newGrid)
+    else:
+        for i in range(N): 
+            for j in range(N): 
+                # compute 8-neghbor sum 
+                # using toroidal boundary conditions - x and y wrap around 
+                # so that the simulaton takes place on a toroidal surface. 
+                eight_neighbors = np.array([ grid[i, (j-1)%N], grid[i, (j+1)%N],
+                						grid[(i-1)%N, j], grid[(i+1)%N, j],
+                						grid[(i-1)%N, (j-1)%N], grid[(i-1)%N, (j+1)%N],
+                						grid[(i+1)%N, (j-1)%N], grid[(i+1)%N, (j+1)%N] ]) 
+        
+                nonzero_array = np.nonzero(eight_neighbors)[0]
+                total = len(nonzero_array)
+                # apply Conway's rules 
+                if grid[i, j] > 0: 
+                    #cell currently alive
+                    if (total < 2) or (total > 3): 
+                        newGrid[i, j] = 0
+                else: 
+                    #cell currently dead
+                    if total == 3: 
+                        old_colors = eight_neighbors[nonzero_array]
+                        newGrid[i, j] = get_new_color(old_colors, np.random.uniform(low=0, high=10))
     
     return newGrid
 
