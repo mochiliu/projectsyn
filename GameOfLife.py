@@ -27,6 +27,7 @@ def color_drift(color, distance):
     drift_direction = np.random.uniform(low=-1,high=1,size=3)
     drift_direction = drift_direction / np.linalg.norm(drift_direction)
     newcolor = np.int32(np.abs(drift_direction*distance + color))
+    newcolor[newcolor > 255] = 255
     if not np.any(newcolor):
         # rgb all 0
         nonzero_array_index = int(np.random.uniform(low=0,high=3))
@@ -118,7 +119,7 @@ def update(grid):
                 #cell currently dead
                 if total == 3: 
                     old_colors = eight_neighbors[nonzero_array]
-                    newGrid[i, j] = get_new_color(old_colors,5)
+                    newGrid[i, j] = get_new_color(old_colors, np.random.uniform(low=0, high=10))
     
     return newGrid
 
