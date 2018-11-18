@@ -58,9 +58,8 @@ def randomGrid(N):
 
 def addGlider(i, j, grid): 
 	"""adds a glider with top left cell at (i, j)"""
-	glider = np.array([[0, 0, 255], 
-					[255, 0, 255], 
-					[0, 255, 255]]) 
+	color = int(np.random.uniform(low=1, high=(256*256*256)-1))
+	glider = np.array([[0, 0, color], [color, 0, color], [0, color, color]]) 
 	grid[i:i+3, j:j+3] = glider 
 
 def addGosperGliderGun(i, j, grid): 
