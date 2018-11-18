@@ -117,7 +117,7 @@ def update(grid):
                     newGrid[i, j] = 0
             else: 
                 #cell currently dead
-                if total == 3: 
+                if total == 3 or total == 6: 
                     old_colors = eight_neighbors[nonzero_array]
                     newGrid[i, j] = get_new_color(old_colors, np.random.uniform(low=0, high=10))
     
