@@ -63,7 +63,14 @@ class LEDdisplay:
 			#print('error setting strip')
 
 	def set_from_image_path(self, imagepath):
-		loaded_image = np.reshape(np.array(Image.open(imagepath)),[2700])
+		loaded_image = Image.open(imagepath)
+		width, height = loaded_image.size
+		leftpixel = np.floor(width/2)-15
+		toppixel = np.floor(height/2)-15
+		rightpixel = leftpixel+29
+		bottompixel = toppixel+29       
+		loaded_image.crop((leftpixel, toppixel, rightpixel, bottompixel))
+		loaded_image = np.reshape(np.array(loaded_image),[2700])
 		self.set_from_array(loaded_image)
 
 	def test(self):
@@ -71,4 +78,5 @@ class LEDdisplay:
 		self.set_from_array(testarray)
 
 if __name__ == '__main__':
-	LEDdisplay().test()
+    #LEDdisplay().test()
+    LEDdisplay().set_from_image_path("listening.bmp")
