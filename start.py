@@ -82,6 +82,7 @@ def main_fxn(debug_param):
     cycling_diplay = None
     ml_color = None
     words_to_learn = []
+    new_words_to_learn = []
     background_thread = None
     running = threading.Event()
     

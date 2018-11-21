@@ -67,9 +67,9 @@ class LEDdisplay:
 		width, height = loaded_image.size
 		leftpixel = np.floor(width/2)-15
 		toppixel = np.floor(height/2)-15
-		rightpixel = leftpixel+29
-		bottompixel = toppixel+29       
-		loaded_image.crop((leftpixel, toppixel, rightpixel, bottompixel))
+		rightpixel = leftpixel+30
+		bottompixel = toppixel+30       
+		loaded_image = loaded_image.crop((leftpixel, toppixel, rightpixel, bottompixel))
 		loaded_image = np.reshape(np.array(loaded_image),[2700])
 		self.set_from_array(loaded_image)
 
