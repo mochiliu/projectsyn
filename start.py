@@ -8,6 +8,7 @@ from CyclingDisplay import CyclingDisplay
 from GameOfLife import GameOfLife
 import threading
 import os
+import time
 
 class light_states(Enum):
     PowerOff = 0
@@ -95,7 +96,7 @@ def main_fxn(debug_param):
             if light_state == light_states.CyclingSampleDisplay or light_state == light_states.PlayingGameOfLife:
                 # we are still runing the background changing color process, end it
                 running.clear()
-                
+                time.sleep(0.2)
             powerstate = not light_state == light_states.PowerOff
             powerstate = display_listening_indicator(powerstate, disp)
             light_state = light_states.ListeningForSpeech
