@@ -22,19 +22,23 @@ logging.basicConfig(level=logging.DEBUG)
 # API backend defaults to ALSA on Linux.
 port = sys.argv[1] if len(sys.argv) > 1 else None
 
+print(port)
+
 try:
-    midiout, port_name = open_midioutput(port, "output")
+    midiout, port_name = open_midioutput(port)
 except (EOFError, KeyboardInterrupt):
     sys.exit()
 
 note_on = [NOTE_ON, 60, 112]  # channel 1, middle C, velocity 112
 note_off = [NOTE_OFF, 60, 0]
 
-print("Sending NoteOn event.")
-midiout.send_message(note_on)
-time.sleep(1)
-print("Sending NoteOff event.")
-midiout.send_message(note_off)
+for i in range(100):
+    print("Sending NoteOn event.")
+    midiout.send_message(note_on)
+    time.sleep(1)
+    print("Sending NoteOff event.")
+    midiout.send_message(note_off)
+    time.sleep(1)
 
 del midiout
 print("Exit.")
