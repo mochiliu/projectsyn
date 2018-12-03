@@ -1,8 +1,39 @@
 # Python code to implement Conway's Game Of Life 
 import numpy as np 
 import time
-from display import LEDdisplay
+#from display import LEDdisplay
 import threading
+import sys
+
+from rtmidi.midiutil import open_midioutput
+from rtmidi.midiconstants import NOTE_OFF, NOTE_ON
+
+
+# adding music componet
+SCALES = {'CMAJOR': [0,2,4,5,7,9,11],
+          'BLUES': [0,3,5,6,7,10,11],
+          'MAJORPENT': [0,2,4,7,11],
+          'MINORPENT': [0,3,5,7,10],
+          'JAZZY': [0,2,4,6,8,10],
+          'INSEN': [0,1,5,7,10],
+          'HIRAJOSHI': [0,1,5,7,9],
+          'THIRDS': [0,4,2,5,4,7,5,9,7,11,13,12],
+          'CHROMATIC': [0,1,2,3,4,5,6,7,8,9,10,11]
+          }
+OFFSET = 10 #keys on midi offset
+
+
+def play_midi(last_keys, keys, midiout):
+    for k in last_keys:
+        # turn off the last set of keys
+        note_off = [NOTE_OFF, round(k), 0]
+        midiout.send_message(note_off)
+        
+    for k in keys:
+        # turn on the next set of keys
+        note_on = [NOTE_ON, round(k), 112] #keys, and velocity
+        midiout.send_message(note_on)
+
 
 def grid_to_linear_color_array(grid):
     N = len(grid)
@@ -127,37 +158,71 @@ def update(grid):
                     if total == 3 or total == 6: 
                         old_colors = eight_neighbors[nonzero_array]
                         newGrid[i, j] = get_new_color(old_colors, np.random.uniform(low=0, high=10))
-    
-    return newGrid
+                        
+    #music
+    notes = {}
+    for x in range(N): 
+        for y in range(N): 
+            if grid[x,y] > 0:
+                if x not in notes:
+                    notes[x] = []
+                notes[x].append(y+OFFSET)
+        
+    return newGrid, notes
 
 class GameOfLife:
-    def __init__(self, disp, frame_rate):
+    def __init__(self, disp, frame_rate=10):
         self.disp = disp
         self.frame_period = 1.0 / frame_rate 
         self.N = 30
         self.grid = randomGrid(self.N)
-        self.nextgrid = update(self.grid)
+        self.nextgrid, self.notes = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-        self.interp_frame_count = 5
-        
+        self.interp_frame_count = 14
+        self.port = 3
+        self.note_length = self.frame_period * (self.interp_frame_count + 1) / self.N
+        self.scale = SCALES['MINORPENT'] # Pick a scale from above or manufacture your own
+
+        try:
+            #open midi port
+            self.midiout, self.port_name = open_midioutput(self.port)
+        except (EOFError, KeyboardInterrupt):
+            sys.exit()
+            
     def start_game(self, running):
         self.stop_requested = False
         current_interpframe = 0
-        
         last_frame_time = time.clock()
+        
+        last_note_time = last_frame_time + self.note_length + 1 #always start with turning a note on
+        last_keys = []
+        keys = []
+        cursor = 0
         while running.is_set():
-            current_time = time.clock()
+            current_time = time.clock()        
+            if (current_time - last_note_time) > self.note_length:
+                #time to update music
+                last_keys = keys.copy()
+                keys = []
+                if cursor in self.notes:
+                    for note in self.notes[cursor]:
+                        keys.append(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))]))                    
+                play_midi(last_keys, keys, self.midiout)
+                cursor += 1
+                last_note_time = current_time
+                
             if (current_time - last_frame_time > self.frame_period):
-                #time to update
+                #time to update light board
                 if current_interpframe >= self.interp_frame_count:
                     #get the next cycle of the game
                     self.grid = self.nextgrid.copy()
-                    self.nextgrid = update(self.grid)
+                    self.nextgrid, self.notes = update(self.grid)
                     self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
                     self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
                     single_color_linear_array = self.grid_linear_color_array.copy()
                     current_interpframe = 0
+                    cursor = 0
                     #print('next cycle')
                 else:
                     #interpolate between the two grids
@@ -166,15 +231,19 @@ class GameOfLife:
                     next_grid_interp_array = interpolation_ratio * self.next_grid_linear_color_array
                     single_color_linear_array = np.intc(grid_interp_array + next_grid_interp_array)
                     
-                self.disp.set_from_array(single_color_linear_array)
+                #self.disp.set_from_array(single_color_linear_array)
                 last_frame_time = current_time
                 current_interpframe += 1
-                
-                
+        
+        #turn off the last set of keys before aborting
+        play_midi(last_keys, [], self.midiout)
+        del self.midiout
+
 # call main 
 if __name__ == '__main__': 
     running = threading.Event()
-    disp = LEDdisplay()
+    #disp = LEDdisplay()
+    disp = None
     game = GameOfLife(disp,10)
     running.set()
     game.start_game(running)

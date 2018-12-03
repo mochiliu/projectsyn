@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.DEBUG)
 # Prompts user for MIDI input port, unless a valid port number or name
 # is given as the first argument on the command line.
 # API backend defaults to ALSA on Linux.
-port = sys.argv[1] if len(sys.argv) > 1 else None
+port = sys.argv[1] if len(sys.argv) > 1 else 3
 
 print(port)
 
