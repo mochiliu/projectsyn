@@ -1,7 +1,7 @@
 # Python code to implement Conway's Game Of Life 
 import numpy as np 
 import time
-#from display import LEDdisplay
+from display import LEDdisplay
 import threading
 import sys
 
@@ -231,7 +231,7 @@ class GameOfLife:
                     next_grid_interp_array = interpolation_ratio * self.next_grid_linear_color_array
                     single_color_linear_array = np.intc(grid_interp_array + next_grid_interp_array)
                     
-                #self.disp.set_from_array(single_color_linear_array)
+                self.disp.set_from_array(single_color_linear_array)
                 last_frame_time = current_time
                 current_interpframe += 1
         
@@ -242,7 +242,7 @@ class GameOfLife:
 # call main 
 if __name__ == '__main__': 
     running = threading.Event()
-    #disp = LEDdisplay()
+    disp = LEDdisplay()
     disp = None
     game = GameOfLife(disp,10)
     running.set()
