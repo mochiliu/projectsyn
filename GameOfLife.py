@@ -179,7 +179,7 @@ class GameOfLife:
         self.nextgrid, self.notes = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-        self.interp_frame_count = 14
+        self.interp_frame_count = 29
         self.port = 3
         self.note_length = self.frame_period * (self.interp_frame_count + 1) / self.N
         self.scale = SCALES['MINORPENT'] # Pick a scale from above or manufacture your own
