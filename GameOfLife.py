@@ -155,7 +155,7 @@ def update(grid):
                         newGrid[i, j] = 0
                 else: 
                     #cell currently dead
-                    if total == 3 or total == 6: 
+                    if total == 3: #or total == 6: 
                         old_colors = eight_neighbors[nonzero_array]
                         newGrid[i, j] = get_new_color(old_colors, np.random.uniform(low=0, high=10))
                         
@@ -180,7 +180,7 @@ class GameOfLife:
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
         self.interp_frame_count = 29
-        self.port = 3
+        self.port = 1
         self.note_length = self.frame_period * (self.interp_frame_count + 1) / self.N
         self.scale = SCALES['MINORPENT'] # Pick a scale from above or manufacture your own
 
