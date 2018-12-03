@@ -35,6 +35,17 @@ def play_midi(last_keys, keys, midiout):
         midiout.send_message(note_on)
 
 
+def highlight_linear_color_array(N, linear_array, highlightx):
+    pixel_index = 0
+    for x in range(N):
+        for y in range(N):
+            if x == highlightx:
+                if not (linear_array[pixel_index] > 0 or linear_array[pixel_index+1] > 0 or linear_array[pixel_index+2] > 0):
+                    linear_array[pixel_index] = 10
+                    linear_array[pixel_index+1] = 10
+                    linear_array[pixel_index+2] = 10
+            pixel_index += 3
+
 def grid_to_linear_color_array(grid):
     N = len(grid)
     linear_array = np.zeros((N*N*3,), dtype=np.intc)
@@ -166,7 +177,7 @@ def update(grid):
             if grid[x,y] > 0:
                 if x not in notes:
                     notes[x] = []
-                notes[x].append(y+OFFSET)
+                notes[x].append(y+OFFSET) #x is in time
         
     return newGrid, notes
 
@@ -231,7 +242,7 @@ class GameOfLife:
                     next_grid_interp_array = interpolation_ratio * self.next_grid_linear_color_array
                     single_color_linear_array = np.intc(grid_interp_array + next_grid_interp_array)
                     
-                self.disp.set_from_array(single_color_linear_array)
+                self.disp.set_from_array(highlight_linear_color_array(self.N, single_color_linear_array, cursor))
                 last_frame_time = current_time
                 current_interpframe += 1
         
