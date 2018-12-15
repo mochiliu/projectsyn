@@ -6,7 +6,7 @@ class TestClapAnalyzer(unittest.TestCase):
     def setUp(self):
         self.clap_analyzer = ClapAnalyzer(
             note_lengths=[1./4, 1./8, 1./8, 1./4, 1./4],
-            deviation_threshold=0.1
+            deviation_threshold=0.2
         )
         self.clap_analyzer.on_clap_sequence(self.clap_sequence_callback)
         self.num_clap_sequences_detected = 0
@@ -16,12 +16,12 @@ class TestClapAnalyzer(unittest.TestCase):
         return None
 
     def test_scenario1(self):
-        self.clap_analyzer.clap(0.414)
-        self.clap_analyzer.clap(0.660)
-        self.clap_analyzer.clap(0.796)
-        self.clap_analyzer.clap(0.905)
+        self.clap_analyzer.clap(0.8372390000000003)
+        self.clap_analyzer.clap(0.900544)
+        self.clap_analyzer.clap(0.9598629999999995)
+        self.clap_analyzer.clap(1.0347739999999996)
         self.assertEquals(self.num_clap_sequences_detected, 0)
-        self.clap_analyzer.clap(1.155)
+        self.clap_analyzer.clap(1.135986)
         self.assertEquals(self.num_clap_sequences_detected, 1)
 
     def test_scenario2(self):

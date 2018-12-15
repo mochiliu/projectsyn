@@ -8,8 +8,8 @@ class ClapAnalyzer:
         self.buffer_size = len(note_lengths)
         self.pattern = self.note_lengths_to_normalized_pauses(note_lengths)
         self.pattern_sum = sum(self.pattern)
-        self.min_pattern_time = .1 * self.pattern_sum  # min 100 ms between fastest clap in sequence
-        self.max_pattern_time = .5 * self.pattern_sum  # max 500 ms between fastest clap in sequence
+        self.min_pattern_time = .01 * self.pattern_sum  # min 100 ms between fastest clap in sequence
+        self.max_pattern_time = .7 * self.pattern_sum  # max 500 ms between fastest clap in sequence
         self.clap_times = [None] * self.buffer_size
         self.deviation_threshold = deviation_threshold
         self.current_index = 0

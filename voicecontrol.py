@@ -186,13 +186,13 @@ class VoiceController(object):
             cur_data = self.stream.read(CHUNK, exception_on_overflow = False)
             slid_win.append(math.sqrt(abs(audioop.avg(cur_data, 4))))
             #print slid_win[-1]
-            if(sum([x > THRESHOLD for x in slid_win]) > 0):
+            if((sum([x > THRESHOLD for x in slid_win]) > 0) and ((time.clock() - start_time) < MAX_RECORD_TIME)):
                 if(not started):
                     print ("Starting record of phrase")
                     started = True
                     start_time = time.clock()
                 audio2send.append(cur_data)
-            elif (started is True or (time.clock() - start_time) > MAX_RECORD_TIME):
+            elif started is True:
                 self.stream.stop_stream()
                 self.stop()
                 print ("Finished")

@@ -46,15 +46,20 @@ class ClapAnalyzer:
 
         time_diff = time - first_clap_in_sequence
         avg_time_per_clap_unit = time_diff / self.pattern_sum
+        #print(avg_time_per_clap_unit)
         if self.min_pattern_time <= time_diff <= self.max_pattern_time:
+            print(self.pattern)
             total_deviation = 0
             j = 0
             for i in range(self.current_index - self.buffer_size + 1, self.current_index):
+                #print(i)
                 clap_time_diff = self.clap_times[i + 1] - self.clap_times[i]
                 relative_clap_time_diff = clap_time_diff / avg_time_per_clap_unit
+                #print(relative_clap_time_diff)
                 total_deviation += (relative_clap_time_diff - self.pattern[j]) ** 2
+                #print(total_deviation)
                 j += 1
-
+            #print(total_deviation)
             if total_deviation < self.deviation_threshold:
                 for fn in self.clap_sequence_listeners:
                     fn()
@@ -75,9 +80,10 @@ if __name__ == "__main__":
         note_lengths=[1./4, 1./8, 1./8, 1./4, 1./4],
         deviation_threshold=0.2)
     clap_analyzer.on_clap_sequence(clap_sequence_callback)
-    clap_analyzer.clap(0.5988639999999998)
-    clap_analyzer.clap(0.6816079999999998)
-    clap_analyzer.clap(0.7371049999999997)
-    clap_analyzer.clap(0.7925519999999997)
-    clap_analyzer.clap(0.8724659999999993)
+    clap_analyzer.clap(3.9845700000000006)
+    clap_analyzer.clap(4.120747000000001)
+    clap_analyzer.clap(4.205103)
+    clap_analyzer.clap(4.2899745)
+    clap_analyzer.clap(4.4422950000000005)
+    
     print('testdone')
