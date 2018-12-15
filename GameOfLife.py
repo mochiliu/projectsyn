@@ -31,7 +31,7 @@ def play_midi(last_keys, keys, midiout):
         
     for k in keys:
         # turn on the next set of keys
-        note_on = [NOTE_ON, round(k), 112] #keys, and velocity
+        note_on = [NOTE_ON, round(k), 50] #keys, and velocity
         midiout.send_message(note_on)
 
 
@@ -41,10 +41,11 @@ def highlight_linear_color_array(N, linear_array, highlightx):
         for y in range(N):
             if x == highlightx:
                 if not (linear_array[pixel_index] > 0 or linear_array[pixel_index+1] > 0 or linear_array[pixel_index+2] > 0):
-                    linear_array[pixel_index] = 10
-                    linear_array[pixel_index+1] = 10
-                    linear_array[pixel_index+2] = 10
+                    linear_array[pixel_index] = 255
+                    linear_array[pixel_index+1] = 255
+                    linear_array[pixel_index+2] = 255
             pixel_index += 3
+    return linear_array
 
 def grid_to_linear_color_array(grid):
     N = len(grid)
@@ -93,7 +94,7 @@ def randomGrid(N):
     grid = np.zeros((N,N), dtype=int)
     for i in range(N): 
         for j in range(N): 
-            if np.random.uniform() < 0.2:
+            if np.random.uniform() < 0.1:
                 # cell alive
                 grid[i,j] = int(np.random.uniform(low=1, high=(256*256*256)-1))
     return grid
@@ -190,7 +191,7 @@ class GameOfLife:
         self.nextgrid, self.notes = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-        self.interp_frame_count = 29
+        self.interp_frame_count = 59
         self.port = 1
         self.note_length = self.frame_period * (self.interp_frame_count + 1) / self.N
         self.scale = SCALES['MINORPENT'] # Pick a scale from above or manufacture your own
@@ -240,9 +241,10 @@ class GameOfLife:
                     interpolation_ratio = current_interpframe / self.interp_frame_count
                     grid_interp_array = (1-interpolation_ratio) * self.grid_linear_color_array
                     next_grid_interp_array = interpolation_ratio * self.next_grid_linear_color_array
-                    single_color_linear_array = np.intc(grid_interp_array + next_grid_interp_array)
+                    #single_color_linear_array = np.intc(grid_interp_array + next_grid_interp_array)
+                    single_color_linear_array = self.grid_linear_color_array.copy()
                     
-                self.disp.set_from_array(highlight_linear_color_array(self.N, single_color_linear_array, cursor))
+                self.disp.set_from_array(highlight_linear_color_array(self.N, single_color_linear_array, max(0,cursor-1)))
                 last_frame_time = current_time
                 current_interpframe += 1
         

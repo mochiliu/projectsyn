@@ -21,7 +21,7 @@ CHUNK = 1024 #CHUNKS of bytes to read each time from mic for google cloud speech
 THRESHOLD = 3000  # The threshold intensity that defines silence
 SILENCE_LIMIT = 2  # Silence limit in seconds to stop the recording
 PREV_AUDIO = 0.5  #seconds of audo to prepend to the sending data
-MAX_RECORD_TIME = 15 # max seconds to record audio for speech detection
+MAX_RECORD_TIME = 5 # max seconds to record audio for speech detection
 
 INITIAL_TAP_THRESHOLD = 0.05
 FORMAT = pyaudio.paInt16 
@@ -97,7 +97,7 @@ class VoiceController(object):
     def tapDetected(self): #One tap DETECTED
         time_diff = time.clock() - self.clap_start_time
         self.clap_analyzer.clap(time_diff)
-        #print('tap ' + str(time_diff))
+        print('tap ' + str(time_diff))
 
     def resetClapSequence(self):
         self.clap_sequences_detected = False
@@ -111,7 +111,7 @@ class VoiceController(object):
         for i in range( self.pa.get_device_count() ):     
             devinfo = self.pa.get_device_info_by_index(i)   
             print( "Device %d: %s"%(i,devinfo["name"]) )
-            for keyword in ["mic","input"]:
+            for keyword in ["mic","input","default"]:
                 if keyword in devinfo["name"].lower():
                     print( "Found an input: device %d - %s"%(i,devinfo["name"]) )
                     device_index = i
@@ -217,8 +217,8 @@ class VoiceController(object):
         return filename + '.wav'
 
 
-#if __name__ == "__main__":
-#    vc = VoiceController()
-#    response = vc.listen()
+if __name__ == "__main__":
+    vc = VoiceController()
+    vc.find_input_device()
 
 
