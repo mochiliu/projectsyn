@@ -185,13 +185,16 @@ class VoiceController(object):
         while (True):
             cur_data = self.stream.read(CHUNK, exception_on_overflow = False)
             slid_win.append(math.sqrt(abs(audioop.avg(cur_data, 4))))
+            current_time = time.clock()
             #print slid_win[-1]
-            if((sum([x > THRESHOLD for x in slid_win]) > 0) and ((time.clock() - start_time) < MAX_RECORD_TIME)):
+            if((sum([x > THRESHOLD for x in slid_win]) > 0) and ((current_time - start_time) < MAX_RECORD_TIME)):
                 if(not started):
                     print ("Starting record of phrase")
                     started = True
                     start_time = time.clock()
                 audio2send.append(cur_data)
+            elif ((current_time - start_time) < MAX_RECORD_TIME):
+                prev_audio.append(cur_data)
             elif started is True:
                 self.stream.stop_stream()
                 self.stop()
@@ -201,8 +204,7 @@ class VoiceController(object):
                 os.remove(filename)
                 # Remove temp file. Comment line to review.
                 return response
-            else:
-                prev_audio.append(cur_data)
+
     
     def save_speech(self, data):
         filename = 'output_'+str(int(time.time()))
