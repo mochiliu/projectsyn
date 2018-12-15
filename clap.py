@@ -48,7 +48,7 @@ class ClapAnalyzer:
         avg_time_per_clap_unit = time_diff / self.pattern_sum
         #print(avg_time_per_clap_unit)
         if self.min_pattern_time <= time_diff <= self.max_pattern_time:
-            print(self.pattern)
+            #print(self.pattern)
             total_deviation = 0
             j = 0
             for i in range(self.current_index - self.buffer_size + 1, self.current_index):
