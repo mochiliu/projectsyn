@@ -1,0 +1,13 @@
+#clap trainning
+import numpy as np
+clapset = np.array([[0.4733709999999993, 0.5544709999999995, 0.6151799999999996, 0.6839969999999997, 0.7539189999999998], [1.358498, 1.4236269999999998, 1.4659149999999999, 1.5507529999999994, 1.6694689999999994], [2.4210709999999995, 2.482773999999999, 2.522404999999999, 2.584028, 2.7204180000000004], [3.8651110000000006, 4.001849999999999, 4.066011, 4.153174999999999, 4.271725]], np.float)
+
+#get normalized beats
+index=0
+
+total_time = clapset[index,4] - clapset[index,0]
+time_diffs = []
+for clap_index in range(4):
+    time_diffs.append( clapset[index,clap_index+1] - clapset[index,clap_index] )
+    
+print(time_diffs)
