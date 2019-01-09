@@ -207,7 +207,7 @@ class GameOfLife:
 
             
     def start_game(self, running):
-        self.fs.start()
+        self.fs.start(driver='alsa')
         sfid = self.fs.sfload('/usr/share/sounds/sf2/FluidR3_GM.sf2')
         self.fs.program_select(0, sfid, 0, 0)
         self.stop_requested = False
