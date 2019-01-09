@@ -190,6 +190,6 @@ def main_fxn(debug_param):
             
 if __name__ == "__main__":
     #main_fxn(['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'indigo', 'violet', 'purple', 'magenta', 'pink', 'brown', 'white', 'gray', 'black', 'teal'])
-    main_fxn(['red'])
+    main_fxn(['life'])
     #main_fxn([])
 
