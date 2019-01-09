@@ -5,8 +5,9 @@ from display import LEDdisplay
 import threading
 import sys
 
-from rtmidi.midiutil import open_midioutput
-from rtmidi.midiconstants import NOTE_OFF, NOTE_ON
+#from rtmidi.midiutil import open_midioutput
+#from rtmidi.midiconstants import NOTE_OFF, NOTE_ON
+import fluidsynth
 
 
 # adding music componet
@@ -23,16 +24,18 @@ SCALES = {'CMAJOR': [0,2,4,5,7,9,11],
 OFFSET = 10 #keys on midi offset
 
 
-def play_midi(last_keys, keys, midiout):
+def play_midi(last_keys, keys, fs):
     for k in last_keys:
         # turn off the last set of keys
-        note_off = [NOTE_OFF, round(k), 0]
-        midiout.send_message(note_off)
+        # note_off = [NOTE_OFF, round(k), 0]
+        # midiout.send_message(note_off)
+        fs.noteoff(0, round(k))
         
     for k in keys:
         # turn on the next set of keys
-        note_on = [NOTE_ON, round(k), 50] #keys, and velocity
-        midiout.send_message(note_on)
+        # note_on = [NOTE_ON, round(k), 50] #keys, and velocity
+        # midiout.send_message(note_on)
+        fs.noteon(0, round(k), 50) #instument keys, and velocity
 
 
 def highlight_linear_color_array(N, linear_array, highlightx):
@@ -192,17 +195,21 @@ class GameOfLife:
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
         self.interp_frame_count = 59
-        self.port = 1
         self.note_length = self.frame_period * (self.interp_frame_count + 1) / self.N
         self.scale = SCALES['MINORPENT'] # Pick a scale from above or manufacture your own
+#        self.port = 1
+        # try:
+        #     #open midi port
+        #     self.midiout, self.port_name = open_midioutput(self.port)
+        # except (EOFError, KeyboardInterrupt):
+        #     sys.exit()
+        self.fs = fluidsynth.Synth()
 
-        try:
-            #open midi port
-            self.midiout, self.port_name = open_midioutput(self.port)
-        except (EOFError, KeyboardInterrupt):
-            sys.exit()
             
     def start_game(self, running):
+        self.fs.start()
+        sfid = self.fs.sfload('/usr/share/sounds/sf2/FluidR3_GM.sf2')
+        self.fs.program_select(0, sfid, 0, 0)
         self.stop_requested = False
         current_interpframe = 0
         last_frame_time = time.clock()
@@ -220,7 +227,8 @@ class GameOfLife:
                 if cursor in self.notes:
                     for note in self.notes[cursor]:
                         keys.append(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))]))                    
-                play_midi(last_keys, keys, self.midiout)
+                #play_midi(last_keys, keys, self.midiout)
+                play_midi(last_keys, keys, self.fs)
                 cursor += 1
                 last_note_time = current_time
                 
@@ -249,8 +257,10 @@ class GameOfLife:
                 current_interpframe += 1
         
         #turn off the last set of keys before aborting
-        play_midi(last_keys, [], self.midiout)
-        del self.midiout
+        #play_midi(last_keys, [], self.midiout)
+        play_midi(last_keys, [], self.fs)
+        self.fs.delete()
+        #del self.midiout
 
 # call main 
 if __name__ == '__main__': 
