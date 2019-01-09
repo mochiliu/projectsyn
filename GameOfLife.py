@@ -4,9 +4,6 @@ import time
 from display import LEDdisplay
 import threading
 import sys
-
-#from rtmidi.midiutil import open_midioutput
-#from rtmidi.midiconstants import NOTE_OFF, NOTE_ON
 import fluidsynth
 
 
@@ -197,12 +194,7 @@ class GameOfLife:
         self.interp_frame_count = 59
         self.note_length = self.frame_period * (self.interp_frame_count + 1) / self.N
         self.scale = SCALES['MINORPENT'] # Pick a scale from above or manufacture your own
-#        self.port = 1
-        # try:
-        #     #open midi port
-        #     self.midiout, self.port_name = open_midioutput(self.port)
-        # except (EOFError, KeyboardInterrupt):
-        #     sys.exit()
+
         self.fs = fluidsynth.Synth()
 
             
@@ -257,10 +249,8 @@ class GameOfLife:
                 current_interpframe += 1
         
         #turn off the last set of keys before aborting
-        #play_midi(last_keys, [], self.midiout)
         play_midi(last_keys, [], self.fs)
         self.fs.delete()
-        #del self.midiout
 
 # call main 
 if __name__ == '__main__': 
