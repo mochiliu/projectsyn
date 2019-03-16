@@ -18,20 +18,16 @@ SCALES = {'CMAJOR': [0,2,4,5,7,9,11],
           'THIRDS': [0,4,2,5,4,7,5,9,7,11,13,12],
           'CHROMATIC': [0,1,2,3,4,5,6,7,8,9,10,11]
           }
-OFFSET = 10 #keys on midi offset
+OFFSET = 0 #keys on midi offset
 
 
 def play_midi(last_keys, keys, fs):
     for k in last_keys:
         # turn off the last set of keys
-        # note_off = [NOTE_OFF, round(k), 0]
-        # midiout.send_message(note_off)
         fs.noteoff(0, round(k))
         
     for k in keys:
         # turn on the next set of keys
-        # note_on = [NOTE_ON, round(k), 50] #keys, and velocity
-        # midiout.send_message(note_on)
         fs.noteon(0, round(k), 50) #instument keys, and velocity
 
 
@@ -41,9 +37,9 @@ def highlight_linear_color_array(N, linear_array, highlightx):
         for y in range(N):
             if x == highlightx:
                 if not (linear_array[pixel_index] > 0 or linear_array[pixel_index+1] > 0 or linear_array[pixel_index+2] > 0):
-                    linear_array[pixel_index] = 255
-                    linear_array[pixel_index+1] = 255
-                    linear_array[pixel_index+2] = 255
+                    linear_array[pixel_index] = 50
+                    linear_array[pixel_index+1] = 50
+                    linear_array[pixel_index+2] = 50
             pixel_index += 3
     return linear_array
 
@@ -167,7 +163,7 @@ def update(grid):
                         newGrid[i, j] = 0
                 else: 
                     #cell currently dead
-                    if total == 3 or total == 6: 
+                    if total == 3 or total == 6:  #hi-life is with 3 or 6
                         old_colors = eight_neighbors[nonzero_array]
                         newGrid[i, j] = get_new_color(old_colors, np.random.uniform(low=0, high=10))
                         
@@ -183,7 +179,7 @@ def update(grid):
     return newGrid, notes
 
 class GameOfLife:
-    def __init__(self, disp, frame_rate=10):
+    def __init__(self, disp, frame_rate=10, music=True):
         self.disp = disp
         self.frame_period = 1.0 / frame_rate 
         self.N = 30
@@ -191,17 +187,20 @@ class GameOfLife:
         self.nextgrid, self.notes = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-        self.interp_frame_count = 59
+        self.interp_frame_count = 119
         self.note_length = self.frame_period * (self.interp_frame_count + 1) / self.N
-        self.scale = SCALES['MINORPENT'] # Pick a scale from above or manufacture your own
-
-        self.fs = fluidsynth.Synth()
-
+        self.scale = SCALES['MAJORPENT'] # Pick a scale from above or manufacture your own
+        self.fs = fluidsynth.Synth(gain=3)
+        self.music = music
             
     def start_game(self, running):
         self.fs.start(driver='alsa')
         sfid = self.fs.sfload('/usr/share/sounds/sf2/FluidR3_GM.sf2')
-        self.fs.program_select(0, sfid, 0, 0)
+        self.fs.program_select(0, sfid, 0, 11) #precussion
+        #self.fs.program_select(0, sfid, 0, 0) #piano(0,0) rhodesep(0,4) legendep(0,5) glockenspiel (0,9) vibraphone (0,11) xylophone (0,13) tubularbells (0,14) 
+        #percussive organ (0,17) churchorgan (0,19) accordian (0,21) gitar (0,25) bass gitar (0,34) synth bass (0,38) violin (0,40) strings (0,48) ahhchoir (0,52) 
+        #trumpet (0,56) tuba (0,58) brasssection (0,61)
+        print(self.fs.channel_info(0))
         self.stop_requested = False
         current_interpframe = 0
         last_frame_time = time.clock()
@@ -212,7 +211,7 @@ class GameOfLife:
         cursor = 0
         while running.is_set():
             current_time = time.clock()        
-            if (current_time - last_note_time) > self.note_length:
+            if self.music and (current_time - last_note_time) > self.note_length:
                 #time to update music
                 last_keys = keys.copy()
                 keys = []
@@ -241,23 +240,26 @@ class GameOfLife:
                     interpolation_ratio = current_interpframe / self.interp_frame_count
                     grid_interp_array = (1-interpolation_ratio) * self.grid_linear_color_array
                     next_grid_interp_array = interpolation_ratio * self.next_grid_linear_color_array
-                    #single_color_linear_array = np.intc(grid_interp_array + next_grid_interp_array)
-                    single_color_linear_array = self.grid_linear_color_array.copy()
-                    
-                self.disp.set_from_array(highlight_linear_color_array(self.N, single_color_linear_array, max(0,cursor-1)))
+                    if self.music:
+                        single_color_linear_array = highlight_linear_color_array(self.N, self.grid_linear_color_array.copy(), max(0, cursor-1))
+                    else:
+                        single_color_linear_array = np.intc(grid_interp_array + next_grid_interp_array)
+                    #single_color_linear_array = self.grid_linear_color_array.copy()
+
+                self.disp.set_from_array(single_color_linear_array)
                 last_frame_time = current_time
                 current_interpframe += 1
         
-        #turn off the last set of keys before aborting
-        play_midi(last_keys, [], self.fs)
+        if self.music:
+            #turn off the last set of keys before aborting
+            play_midi(last_keys, [], self.fs)
         self.fs.delete()
 
 # call main 
 if __name__ == '__main__': 
     running = threading.Event()
     disp = LEDdisplay()
-    disp = None
-    game = GameOfLife(disp,10)
+    game = GameOfLife(disp,10,music=True)
     running.set()
     game.start_game(running)
     
