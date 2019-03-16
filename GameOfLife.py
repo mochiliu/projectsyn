@@ -3,9 +3,16 @@ import numpy as np
 import time
 from display import LEDdisplay
 import threading
-import sys
+#import sys
 import fluidsynth
 
+#presets
+SCALE = 'MAJORPENT'
+INSTRUMENT = 11
+#piano(0,0) rhodesep(0,4) legendep(0,5) glockenspiel (0,9) vibraphone (0,11) xylophone (0,13) tubularbells (0,14) 
+        #percussive organ (0,17) churchorgan (0,19) accordian (0,21) gitar (0,25) bass gitar (0,34) synth bass (0,38) violin (0,40) strings (0,48) ahhchoir (0,52) 
+        #trumpet (0,56) tuba (0,58) brasssection (0,61)
+FRAMERATE = 10 #Hz
 
 # adding music componet
 SCALES = {'CMAJOR': [0,2,4,5,7,9,11],
@@ -22,13 +29,13 @@ OFFSET = 0 #keys on midi offset
 
 
 def play_midi(last_keys, keys, fs):
-    for k in last_keys:
+    for k, v in last_keys:
         # turn off the last set of keys
-        fs.noteoff(0, round(k))
+        fs.noteoff(0, k)
         
-    for k in keys:
+    for k, v in keys:
         # turn on the next set of keys
-        fs.noteon(0, round(k), 50) #instument keys, and velocity
+        fs.noteon(0, k, v) #instument keys, and velocity
 
 
 def highlight_linear_color_array(N, linear_array, highlightx):
@@ -174,7 +181,7 @@ def update(grid):
             if grid[x,y] > 0:
                 if x not in notes:
                     notes[x] = []
-                notes[x].append(y+OFFSET) #x is in time
+                notes[x].append((y+OFFSET, grid[x,y])) #x is in time, tuple is (note, color)
         
     return newGrid, notes
 
@@ -189,17 +196,15 @@ class GameOfLife:
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
         self.interp_frame_count = 119
         self.note_length = self.frame_period * (self.interp_frame_count + 1) / self.N
-        self.scale = SCALES['MAJORPENT'] # Pick a scale from above or manufacture your own
+        self.scale = SCALES[SCALE] # Pick a scale from above or manufacture your own
         self.fs = fluidsynth.Synth(gain=3)
         self.music = music
             
     def start_game(self, running):
         self.fs.start(driver='alsa')
         sfid = self.fs.sfload('/usr/share/sounds/sf2/FluidR3_GM.sf2')
-        self.fs.program_select(0, sfid, 0, 11) #precussion
-        #self.fs.program_select(0, sfid, 0, 0) #piano(0,0) rhodesep(0,4) legendep(0,5) glockenspiel (0,9) vibraphone (0,11) xylophone (0,13) tubularbells (0,14) 
-        #percussive organ (0,17) churchorgan (0,19) accordian (0,21) gitar (0,25) bass gitar (0,34) synth bass (0,38) violin (0,40) strings (0,48) ahhchoir (0,52) 
-        #trumpet (0,56) tuba (0,58) brasssection (0,61)
+        self.fs.program_select(0, sfid, 0, INSTRUMENT) #instrument selection
+        #self.fs.program_select(0, sfid, 0, 0) 
         print(self.fs.channel_info(0))
         self.stop_requested = False
         current_interpframe = 0
@@ -216,8 +221,10 @@ class GameOfLife:
                 last_keys = keys.copy()
                 keys = []
                 if cursor in self.notes:
-                    for note in self.notes[cursor]:
-                        keys.append(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))]))                    
+                    for note, color in self.notes[cursor]:
+                        key = round(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))])) #convert note into key using the prechoosen scale
+                        veolcity = round(np.mean(rgb_int2tuple(color))/255*50)
+                        keys.append((key, veolcity))
                 #play_midi(last_keys, keys, self.midiout)
                 play_midi(last_keys, keys, self.fs)
                 cursor += 1
@@ -259,7 +266,6 @@ class GameOfLife:
 if __name__ == '__main__': 
     running = threading.Event()
     disp = LEDdisplay()
-    game = GameOfLife(disp,10,music=True)
+    game = GameOfLife(disp,FRAMERATE,music=True)
     running.set()
     game.start_game(running)
-    
