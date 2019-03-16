@@ -13,7 +13,7 @@ INSTRUMENT = 11
         #percussive organ (0,17) churchorgan (0,19) accordian (0,21) gitar (0,25) bass gitar (0,34) synth bass (0,38) violin (0,40) strings (0,48) ahhchoir (0,52) 
         #trumpet (0,56) tuba (0,58) brasssection (0,61)
 FRAMERATE = 10 #Hz
-
+MAXVELOCITY = 100
 # adding music componet
 SCALES = {'CMAJOR': [0,2,4,5,7,9,11],
           'BLUES': [0,3,5,6,7,10,11],
@@ -223,7 +223,7 @@ class GameOfLife:
                 if cursor in self.notes:
                     for note, color in self.notes[cursor]:
                         key = round(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))])) #convert note into key using the prechoosen scale
-                        veolcity = round(np.mean(rgb_int2tuple(color))/255*50)
+                        veolcity = int(round(np.mean(rgb_int2tuple(color))/255*MAXVELOCITY))
                         keys.append((key, veolcity))
                 #play_midi(last_keys, keys, self.midiout)
                 play_midi(last_keys, keys, self.fs)
