@@ -35,7 +35,6 @@ disp = LEDdisplay()
 def receiveUDP(msg):
     linear_array = msg[0:(N*N*3)]
     on_keys = []
-    off_keys = []
     
     index = N*N*3
     while True:
@@ -44,17 +43,18 @@ def receiveUDP(msg):
             break
         on_keys.append((msg[index], msg[index+1]))
         index += 2
-    index += 2
-    while True:
-        if msg[index] == 0 and msg[index+1] == 0:
-            #look for 2 0s in a row
-            break
-        off_keys.append((msg[index], msg[index+1]))
-        index += 2
+#    index += 2
+#    off_keys = []
+#    while True:
+#        if msg[index] == 0 and msg[index+1] == 0:
+#            #look for 2 0s in a row
+#            break
+#        off_keys.append((msg[index], msg[index+1]))
+#        index += 2
         
-    return linear_array, on_keys, off_keys
+    return linear_array, on_keys#, off_keys
 
-
+on_keys = []
 while True:
     data, addr = sock.recvfrom(BUFFER_SIZE)
     linear_array = np.zeros(BUFFER_SIZE, dtype=np.int)
@@ -62,7 +62,8 @@ while True:
     for i in range(BUFFER_SIZE):
         s+="B"
     msg = struct.unpack(s,data)
-    linear_array, on_keys, off_keys = receiveUDP(msg)
+    off_keys = on_keys
+    linear_array, on_keys = receiveUDP(msg)
     disp.set_from_array(linear_array)
     play_midi(on_keys, off_keys, fs)
 
