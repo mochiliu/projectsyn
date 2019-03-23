@@ -47,7 +47,7 @@ def highlight_linear_color_array(N, linear_array, highlightx):
 
 def grid_to_linear_color_array(grid):
     N = len(grid)
-    linear_array = np.zeros((N*N*3,), dtype=np.intc)
+    linear_array = np.zeros((N*N*3,), dtype=np.uint8)
     pixel_index = 0
     for i in range(N):
         for j in range(N):
@@ -276,7 +276,7 @@ class GameOfLife:
                     if self.music:
                         single_color_linear_array = highlight_linear_color_array(self.N, self.grid_linear_color_array.copy(), max(0, cursor-1))
                     else:
-                        single_color_linear_array = np.intc(grid_interp_array + next_grid_interp_array)
+                        single_color_linear_array = np.uint8(grid_interp_array + next_grid_interp_array)
                     #single_color_linear_array = self.grid_linear_color_array.copy()
 
                 #STREAM LIGHTS
