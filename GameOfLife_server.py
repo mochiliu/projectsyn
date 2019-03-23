@@ -276,7 +276,6 @@ class GameOfLife:
                 
                 cursor += 1
                 last_note_time = current_time
-                running.clear()
             if (current_time - last_frame_time > self.frame_period):
                 #time to update light board
                 if current_interpframe >= self.interp_frame_count - 1:
