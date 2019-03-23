@@ -7,8 +7,11 @@ from PIL import Image
 
 UDP_IP = "192.168.1.247"
 UDP_PORT = 5005
+BUFFER_SIZE = 3000
+
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 IMG_SIZE = 32
+N = 30
 
 #presets
 SCALE = 'MAJORPENT'
@@ -30,7 +33,21 @@ SCALES = {'CMAJOR': [0,2,4,5,7,9,11],
           }
 OFFSET = 0 #keys on midi offset
 
-def sendUDP(msg):
+def sendUDP(linear_light_array, keys_on, keys_off):
+    msg = np.zeros((BUFFER_SIZE,), dtype=np.uint8)
+    msg[0:(N*N*3)] = linear_light_array
+    index = N*N*3
+    for pitch, velocity in keys_on:
+        msg[index] = pitch
+        msg[index+1] = velocity
+        index += 2
+    index += 2 #skip two spaces as signifier that keys_on is done
+    for pitch, velocity in keys_off:
+        msg[index] = pitch
+        msg[index+1] = velocity
+        index += 2
+    #watch for overflow error?
+    #print(len(msg))
     sock.sendto(msg, (UDP_IP, UDP_PORT))
 
 def highlight_linear_color_array(N, linear_array, highlightx):
@@ -221,19 +238,19 @@ def grid2img(grid, img_size, colorscheme='soft'):
 
 class GameOfLife:
     def __init__(self, frame_rate=10, music=True):
+        self.N = N
         self.frame_period = 1.0 / frame_rate 
-        self.N = 30
+        self.interp_frame_count = 120 # how many frames per game of life update
+        self.note_length = max(self.frame_period * (self.interp_frame_count) / self.N, self.frame_period)
+        
         self.grid = randomGrid(self.N)
         self.nextgrid, self.notes = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-        self.interp_frame_count = 119
-        self.note_length = self.frame_period * (self.interp_frame_count + 1) / self.N
         self.scale = SCALES[SCALE] # Pick a scale from above or manufacture your own
         self.music = music
             
     def start_game(self, running):
-        self.stop_requested = False
         current_interpframe = 0
         last_frame_time = time.clock()
         
@@ -252,13 +269,17 @@ class GameOfLife:
                         pitch = round(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))])) #convert note into key using the prechoosen scale
                         veolcity = int(round(np.mean(rgb_int2tuple(color))/255*MAXVELOCITY))
                         keys.append((pitch, veolcity))
-                #STREAM MUSIC
+                        
+                single_color_linear_array = highlight_linear_color_array(self.N, self.grid_linear_color_array.copy(), max(0, cursor-1))
+                #STREAM
+                sendUDP(single_color_linear_array, keys, last_keys)
+                
                 cursor += 1
                 last_note_time = current_time
-                
+                running.clear()
             if (current_time - last_frame_time > self.frame_period):
                 #time to update light board
-                if current_interpframe >= self.interp_frame_count:
+                if current_interpframe >= self.interp_frame_count - 1:
                     #get the next cycle of the game
                     self.grid = self.nextgrid.copy()
                     self.nextgrid, self.notes = update(self.grid)
@@ -268,20 +289,7 @@ class GameOfLife:
                     current_interpframe = 0
                     cursor = 0
                     #print('next cycle')
-                else:
-                    #interpolate between the two grids
-                    interpolation_ratio = current_interpframe / self.interp_frame_count
-                    grid_interp_array = (1-interpolation_ratio) * self.grid_linear_color_array
-                    next_grid_interp_array = interpolation_ratio * self.next_grid_linear_color_array
-                    if self.music:
-                        single_color_linear_array = highlight_linear_color_array(self.N, self.grid_linear_color_array.copy(), max(0, cursor-1))
-                    else:
-                        single_color_linear_array = np.uint8(grid_interp_array + next_grid_interp_array)
-                    #single_color_linear_array = self.grid_linear_color_array.copy()
-
-                #STREAM LIGHTS
-                sendUDP(single_color_linear_array)
-        
+                    
                 last_frame_time = current_time
                 current_interpframe += 1
                 
@@ -293,8 +301,8 @@ class GameOfLife:
 #                running.clear()
         if self.music:
             #turn off the last set of keys before aborting
-            #STREAM MUSIC
-            a = 1
+            #STREAM END
+            sendUDP(np.zeros((self.N*self.N*3,), dtype=np.uint8), [], last_keys)
 
 # call main 
 if __name__ == '__main__': 
