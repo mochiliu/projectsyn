@@ -62,8 +62,8 @@ def receiveUDP(msg):
 on_keys = []
 last_frame_time = 0
 while True:
-    data, addr = sock.recvfrom(BUFFER_SIZE)
-    if data:
+    try:
+        data, addr = sock.recvfrom(BUFFER_SIZE)
         linear_array = np.zeros(BUFFER_SIZE, dtype=np.int)
         s = ""
         for i in range(BUFFER_SIZE):
@@ -71,6 +71,8 @@ while True:
         msg = struct.unpack(s,data)
         off_keys = on_keys
         linear_array, on_keys = receiveUDP(msg)
+    except BlockingIOError:
+        pass
     
     current_time = time.clock()        
     if (current_time - last_frame_time > frame_period):    
