@@ -3,13 +3,17 @@ from display import LEDdisplay
 import socket
 import struct
 import fluidsynth
+import time
 
 UDP_IP = "192.168.1.247"
 UDP_PORT = 5005
 BUFFER_SIZE = 3000
 N = 30
-
+FRAMERATE = 3 #Hz
 INSTRUMENT = 11
+
+
+frame_period = 1.0 / FRAMERATE
 
 def play_midi(on_keys, off_keys, fs):
     for pitch, velocity in off_keys:
@@ -22,6 +26,7 @@ def play_midi(on_keys, off_keys, fs):
 #set up UDP
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 sock.bind((UDP_IP, UDP_PORT))
+sock.setblocking(False)
 
 #start synth
 fs = fluidsynth.Synth(gain=3)
@@ -55,16 +60,21 @@ def receiveUDP(msg):
     return linear_array, on_keys#, off_keys
 
 on_keys = []
+last_frame_time = 0
 while True:
     data, addr = sock.recvfrom(BUFFER_SIZE)
-    linear_array = np.zeros(BUFFER_SIZE, dtype=np.int)
-    s = ""
-    for i in range(BUFFER_SIZE):
-        s+="B"
-    msg = struct.unpack(s,data)
-    off_keys = on_keys
-    linear_array, on_keys = receiveUDP(msg)
-    disp.set_from_array(linear_array)
-    play_midi(on_keys, off_keys, fs)
-
+    if data:
+        linear_array = np.zeros(BUFFER_SIZE, dtype=np.int)
+        s = ""
+        for i in range(BUFFER_SIZE):
+            s+="B"
+        msg = struct.unpack(s,data)
+        off_keys = on_keys
+        linear_array, on_keys = receiveUDP(msg)
+    
+    current_time = time.clock()        
+    if (current_time - last_frame_time > frame_period):    
+        disp.set_from_array(linear_array)
+        play_midi(on_keys, off_keys, fs)
+        last_frame_time = current_time
 #	print "received message:", linear_array
