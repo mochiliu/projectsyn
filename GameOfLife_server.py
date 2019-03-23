@@ -3,7 +3,7 @@ import numpy as np
 import time
 import threading
 import socket
-from PIL import Image
+#from PIL import Image
 
 UDP_IP = "192.168.1.247"
 UDP_PORT = 5005
@@ -18,7 +18,7 @@ SCALE = 'MAJORPENT'
 #piano(0,0) rhodesep(0,4) legendep(0,5) glockenspiel (0,9) vibraphone (0,11) xylophone (0,13) tubularbells (0,14) 
         #percussive organ (0,17) churchorgan (0,19) accordian (0,21) gitar (0,25) bass gitar (0,34) synth bass (0,38) violin (0,40) strings (0,48) ahhchoir (0,52) 
         #trumpet (0,56) tuba (0,58) brasssection (0,61)
-FRAMERATE = 10 #Hz
+FRAMERATE = 4 #Hz
 MAXVELOCITY = 100
 # adding music componet
 SCALES = {'CMAJOR': [0,2,4,5,7,9,11],
@@ -240,8 +240,7 @@ class GameOfLife:
     def __init__(self, frame_rate=10, music=True):
         self.N = N
         self.frame_period = 1.0 / frame_rate 
-        self.interp_frame_count = 120 # how many frames per game of life update
-        self.note_length = max(self.frame_period * (self.interp_frame_count) / self.N, self.frame_period)
+        self.interp_frame_count = self.N # how many notes in music sequence
         
         self.grid = randomGrid(self.N)
         self.nextgrid, self.notes = update(self.grid)
@@ -254,31 +253,26 @@ class GameOfLife:
         current_interpframe = 0
         last_frame_time = time.clock()
         
-        last_note_time = last_frame_time + self.note_length + 1 #always start with turning a note on
         last_keys = []
         keys = []
-        cursor = 0
         while running.is_set():
             current_time = time.clock()        
-            if self.music and (current_time - last_note_time) > self.note_length:
-                #time to update music
-                last_keys = keys.copy()
-                keys = []
-                if cursor in self.notes:
-                    for note, color in self.notes[cursor]:
-                        pitch = round(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))])) #convert note into key using the prechoosen scale
-                        veolcity = int(round(np.mean(rgb_int2tuple(color))/255*MAXVELOCITY))
-                        keys.append((pitch, veolcity))
-                        
-                single_color_linear_array = highlight_linear_color_array(self.N, self.grid_linear_color_array.copy(), max(0, cursor-1))
-                #STREAM
-                sendUDP(single_color_linear_array, keys, last_keys)
-                
-                cursor += 1
-                last_note_time = current_time
             if (current_time - last_frame_time > self.frame_period):
+                if self.music:
+                    #time to update music
+                    last_keys = keys.copy()
+                    keys = []
+                    if current_interpframe in self.notes:
+                        for note, color in self.notes[current_interpframe]:
+                            pitch = round(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))])) #convert note into key using the prechoosen scale
+                            veolcity = int(round(np.mean(rgb_int2tuple(color))/255*MAXVELOCITY))
+                            keys.append((pitch, veolcity))
+                            
+                    single_color_linear_array = highlight_linear_color_array(self.N, self.grid_linear_color_array.copy(), max(0, current_interpframe-1))
+                    #STREAM
+                
                 #time to update light board
-                if current_interpframe >= self.interp_frame_count - 1:
+                if current_interpframe >= self.interp_frame_count:
                     #get the next cycle of the game
                     self.grid = self.nextgrid.copy()
                     self.nextgrid, self.notes = update(self.grid)
@@ -286,9 +280,9 @@ class GameOfLife:
                     self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
                     single_color_linear_array = self.grid_linear_color_array.copy()
                     current_interpframe = 0
-                    cursor = 0
                     #print('next cycle')
                     
+                sendUDP(single_color_linear_array, keys, last_keys)
                 last_frame_time = current_time
                 current_interpframe += 1
                 
