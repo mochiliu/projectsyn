@@ -29,13 +29,13 @@ OFFSET = 0 #keys on midi offset
 
 
 def play_midi(last_keys, keys, fs):
-    for k, v in last_keys:
+    for pitch, velocity in last_keys:
         # turn off the last set of keys
-        fs.noteoff(0, k)
+        fs.noteoff(0, pitch)
         
-    for k, v in keys:
+    for pitch, v in keys:
         # turn on the next set of keys
-        fs.noteon(0, k, v) #instument keys, and velocity
+        fs.noteon(0, pitch, velocity) #instument keys, and velocity
 
 
 def highlight_linear_color_array(N, linear_array, highlightx):
@@ -222,9 +222,9 @@ class GameOfLife:
                 keys = []
                 if cursor in self.notes:
                     for note, color in self.notes[cursor]:
-                        key = round(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))])) #convert note into key using the prechoosen scale
+                        pitch = round(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))])) #convert note into key using the prechoosen scale
                         veolcity = int(round(np.mean(rgb_int2tuple(color))/255*MAXVELOCITY))
-                        keys.append((key, veolcity))
+                        keys.append((pitch, veolcity))
                 #play_midi(last_keys, keys, self.midiout)
                 play_midi(last_keys, keys, self.fs)
                 cursor += 1
