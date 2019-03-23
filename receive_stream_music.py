@@ -60,6 +60,9 @@ def receiveUDP(msg):
     return linear_array, on_keys#, off_keys
 
 on_keys = []
+off_keys = []
+linear_array =np.zeros((N*N*3,), dtype=np.int)
+
 last_frame_time = 0
 while True:
     try:
