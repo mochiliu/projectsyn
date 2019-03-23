@@ -29,6 +29,7 @@ flags = tf.app.flags
 logging = tf.logging
 FLAGS = flags.FLAGS
 cwd = os.getcwd()
+
 if os.name == 'nt':
     flags.DEFINE_string(
         'checkpoint_file', 'C:\\Users\\Mochi\\Downloads\\hierdec-mel_16bar.tar',
@@ -56,7 +57,7 @@ flags.DEFINE_integer(
     'In `sample` mode, the number of samples to produce. In `interpolate` '
     'mode, the number of steps (including the endpoints).')
 flags.DEFINE_integer(
-    'max_batch_size', 8,
+    'max_batch_size', 1,
     'The maximum batch size to use. Decrease if you are seeing an OOM.')
 flags.DEFINE_float(
     'temperature', 0.5,
