@@ -49,7 +49,7 @@ def receiveUDP(msg):
         if msg[index] == 0 and msg[index+1] == 0:
             #look for 2 0s in a row
             break
-        off_keys.append((msg[index], msg[index+1])
+        off_keys.append((msg[index], msg[index+1]))
         index += 2
         
     return linear_array, on_keys, off_keys
