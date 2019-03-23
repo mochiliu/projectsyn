@@ -258,6 +258,17 @@ class GameOfLife:
         while running.is_set():
             current_time = time.clock()        
             if (current_time - last_frame_time > self.frame_period):
+                #time to update light board
+                if current_interpframe >= self.interp_frame_count:
+                    #get the next cycle of the game
+                    self.grid = self.nextgrid.copy()
+                    self.nextgrid, self.notes = update(self.grid)
+                    self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
+                    self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
+                    single_color_linear_array = self.grid_linear_color_array.copy()
+                    current_interpframe = 0
+                    #print('next cycle')
+                    
                 if self.music:
                     #time to update music
                     last_keys = keys.copy()
@@ -269,18 +280,6 @@ class GameOfLife:
                             keys.append((pitch, veolcity))
                             
                     single_color_linear_array = highlight_linear_color_array(self.N, self.grid_linear_color_array.copy(), max(0, current_interpframe-1))
-                    #STREAM
-                
-                #time to update light board
-                if current_interpframe >= self.interp_frame_count:
-                    #get the next cycle of the game
-                    self.grid = self.nextgrid.copy()
-                    self.nextgrid, self.notes = update(self.grid)
-                    self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
-                    self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-                    single_color_linear_array = self.grid_linear_color_array.copy()
-                    current_interpframe = 0
-                    #print('next cycle')
                     
                 sendUDP(single_color_linear_array, keys, last_keys)
                 last_frame_time = current_time
