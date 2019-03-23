@@ -62,7 +62,7 @@ def receiveUDP(msg):
 on_keys = []
 off_keys = []
 linear_array =np.zeros((N*N*3,), dtype=np.int)
-
+buffer_played = False
 last_frame_time = 0
 while True:
     try:
@@ -74,12 +74,14 @@ while True:
         msg = struct.unpack(s,data)
         off_keys = on_keys
         linear_array, on_keys = receiveUDP(msg)
+        buffer_played = False
     except BlockingIOError:
         pass
     
     current_time = time.clock()        
-    if (current_time - last_frame_time > frame_period):    
+    if (current_time - last_frame_time > frame_period) and not buffer_played:    
         disp.set_from_array(linear_array)
         play_midi(on_keys, off_keys, fs)
         last_frame_time = current_time
+        buffer_played = True
 #	print "received message:", linear_array
