@@ -1,0 +1,73 @@
+import numpy as np
+from neopixel import *
+import socket
+import struct
+import fluidsynth
+
+
+UDP_IP = "192.168.1.247"
+UDP_PORT = 5005
+BUFFER_SIZE = 3000
+
+INSTRUMENT = 11
+
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+sock.bind((UDP_IP, UDP_PORT))
+
+
+def set_from_matrix(strip, mat):
+    mat = mat.astype(int)
+    mat = np.rot90(mat,3)
+    mat[range(mat.shape[0])[::2], :, :] = np.fliplr(mat[range(mat.shape[0])[::2], :, :])
+    for r in range(mat.shape[0]):
+        for c in range(mat.shape[1]):
+            i = r * mat.shape[1] + c
+            strip.setPixelColorRGB(i, *mat[r, c, :])
+    strip.show()
+
+
+# LED strip configuration:
+LED_COUNT      = 900      # Number of LED pixels.
+LED_PIN        = 12      # GPIO pin connected to the pixels (18 uses PWM!).
+#LED_PIN        = 10      # GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).
+LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
+LED_DMA        = 10       # DMA channel to use for generating signal (try 5)
+LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
+LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
+LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+LED_STRIP      = ws.WS2811_STRIP_GRB   # Strip type and colour ordering
+
+strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ,
+                          LED_DMA,LED_INVERT, LED_BRIGHTNESS,
+                          LED_CHANNEL, LED_STRIP)
+strip.begin()
+
+#start synth
+fs = fluidsynth.Synth(gain=3)
+fs.start(driver='alsa')
+sfid = fs.sfload('/usr/share/sounds/sf2/FluidR3_GM.sf2')
+fs.program_select(0, sfid, 0, INSTRUMENT) #instrument selection
+print(fs.channel_info(0))
+
+#def hexint(b):
+#    return int(binascii.hexlify(b), 8)
+
+#def recv_into(arr,source):
+#	view = memoryview(arr).cast('B')
+#	while len(view):
+#		nrecv = source.recv_into(view)
+#		view = view[nrecv:]
+
+while True:
+	data, addr = sock.recvfrom(BUFFER_SIZE) # buffer size is 2700 bytes
+	linear_array = np.zeros(BUFFER_SIZE, dtype=np.int)
+	s = ""
+	for i in range(BUFFER_SIZE):
+		s+="B"
+	linear_array = struct.unpack(s,data)
+	print("received message:", linear_array)
+    #processing
+    
+#	matrix = np.reshape(linear_array, (30,30,3));
+#	set_from_matrix(strip, matrix)
