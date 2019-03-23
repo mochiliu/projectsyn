@@ -37,7 +37,7 @@ print(fs.channel_info(0))
 
 disp = LEDdisplay()
 
-def receiveUDP(msg):
+def decodeUDP(msg):
     linear_array = msg[0:(N*N*3)]
     on_keys = []
     
@@ -59,29 +59,47 @@ def receiveUDP(msg):
         
     return linear_array, on_keys#, off_keys
 
+msg = []
+buffer_msg = []
 on_keys = []
 off_keys = []
 linear_array =np.zeros((N*N*3,), dtype=np.int)
-buffer_played = False
 last_frame_time = 0
+
 while True:
-    try:
-        data, addr = sock.recvfrom(BUFFER_SIZE)
-        linear_array = np.zeros(BUFFER_SIZE, dtype=np.int)
-        s = ""
-        for i in range(BUFFER_SIZE):
-            s+="B"
-        msg = struct.unpack(s,data)
-        off_keys = on_keys
-        linear_array, on_keys = receiveUDP(msg)
-        buffer_played = False
-    except BlockingIOError:
-        pass
+    if not buffer_msg:
+        # at least the buffer is empty, load msg or buffer_msg
+        try:
+            data, addr = sock.recvfrom(BUFFER_SIZE)
+            linear_array = np.zeros(BUFFER_SIZE, dtype=np.int)
+            s = ""
+            for i in range(BUFFER_SIZE):
+                s+="B"
+            if not msg:
+                #msg is empty, load it
+                msg = struct.unpack(s,data)
+            elif not buffer_msg:
+                #msg is not empty, but the buffer is.. load it
+                buffer_msg = struct.unpack(s,data)
+        except BlockingIOError:
+            pass
     
     current_time = time.clock()        
-    if (current_time - last_frame_time > frame_period) and not buffer_played:    
+    if (current_time - last_frame_time > frame_period) and msg:    
+        #time's up, we have not played the msg yet and it exists, play it
+        off_keys = on_keys
+        linear_array, on_keys = decodeUDP(msg)
         disp.set_from_array(linear_array)
         play_midi(on_keys, off_keys, fs)
         last_frame_time = current_time
-        buffer_played = True
+        
+        #unload buffer_msg
+        msg = buffer_msg
+        buffer_msg = []
+
+
+        
+        
+
+        
 #	print "received message:", linear_array
