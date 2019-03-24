@@ -3,7 +3,7 @@ import numpy as np
 import time
 import threading
 import socket
-from music_vae_generate_minimal import MusicVAE
+from vae_module import Life2Music
 
 #from PIL import Image
 
@@ -16,7 +16,7 @@ IMG_SIZE = 32
 N = 30
 
 
-CYCLE_PERIOD = 10 #seconds
+CYCLE_PERIOD = 15 #seconds
 
 
 def sendUDP(linear_light_array, ns):
@@ -185,8 +185,8 @@ class GameOfLife:
         self.nextgrid = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-        self.music_model = MusicVAE()
-        self.notes = self.music_model.random_sample_model()
+        self.music_model = Life2Music()
+        self.notes = self.music_model.make_music_from_GOL(grid2img(self.grid,IMG_SIZE))
         
         
     def start_game(self, running):
@@ -201,7 +201,7 @@ class GameOfLife:
                 #get the next cycle of the game
                 self.grid = self.nextgrid.copy()
                 self.nextgrid = update(self.grid)
-                self.notes = self.music_model.random_sample_model() #need to be threaded?
+                self.notes = self.music_model.make_music_from_GOL(grid2img(self.grid,IMG_SIZE)) #need to be threaded?
                 self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
                 self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
                 last_frame_time = current_time
