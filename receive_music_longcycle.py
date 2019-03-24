@@ -93,6 +93,10 @@ while True:
         #cycle is done, load the next game board
         #unload msg
         linear_array, ns_pitch, ns_velocity, ns_start_time, ns_end_time = decodeUDP(msg)
+        print(ns_pitch)
+        print(ns_velocity)
+        print(ns_start_time)
+        print(ns_end_time)
         disp.set_from_array(linear_array)
         msg = []
         note_sequence_index = 0
