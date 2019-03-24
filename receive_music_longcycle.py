@@ -66,7 +66,6 @@ ns_velocity = []
 
 while True:
     current_time = time.clock()
-
     if not msg:
         try:
             data, addr = sock.recvfrom(BUFFER_SIZE)
@@ -79,8 +78,8 @@ while True:
             pass
     
     if (current_time - last_frame_time > NOTE_PERIOD):
-        on_notes = np.where(ns_start_time == note_sequence_index)
-        off_notes = np.where(ns_end_time == note_sequence_index)
+        on_notes = np.where(ns_start_time == note_sequence_index)[0]
+        off_notes = np.where(ns_end_time == note_sequence_index)[0]
         for on_note in on_notes:
             fs.noteon(0, ns_pitch[on_note], ns_velocity[on_note])
         for off_note in off_notes:
