@@ -27,18 +27,17 @@ def sendUDP(linear_light_array, ns):
         msg[index] = n.pitch
         msg[index+1] = n.velocity
         try:
-            msg[index+2] = np.uint8(n.start_time * 255)
+            msg[index+2] = np.uint8(n.start_time * 8.0)
         except:
             msg[index+2] = 0
         try:
-            msg[index+3] = np.uint8(n.end_time * 255)
+            msg[index+3] = np.uint8(min(n.end_time * 8.0,255))
         except:
             msg[index+3] = 255
         index += 4
         if index >= BUFFER_SIZE:
             break
         
-    print(index)
     sock.sendto(msg, (UDP_IP, UDP_PORT))
 
 def grid_to_linear_color_array(grid):

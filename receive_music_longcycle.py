@@ -52,7 +52,7 @@ def decodeUDP(msg):
         ns_end_time.append(msg[index+3]) # out of 255
         index += 4
     #print(index)
-    return linear_array, ns_pitch, ns_velocity, ns_start_time, ns_end_time
+    return linear_array, np.array(ns_pitch, dtype=np.uint8), np.array(ns_velocity, dtype=np.uint8), np.array(ns_start_time, dtype=np.uint8), np.array(ns_end_time, dtype=np.uint8)
 
 msg = []
 on_keys = []
@@ -93,10 +93,10 @@ while True:
         #cycle is done, load the next game board
         #unload msg
         linear_array, ns_pitch, ns_velocity, ns_start_time, ns_end_time = decodeUDP(msg)
-        print(ns_pitch)
-        print(ns_velocity)
-        print(ns_start_time)
-        print(ns_end_time)
+#        print(ns_pitch)
+#        print(ns_velocity)
+#        print(ns_start_time)
+#        print(ns_end_time)
         disp.set_from_array(linear_array)
         msg = []
         note_sequence_index = 0
