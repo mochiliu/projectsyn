@@ -19,7 +19,7 @@ N = 30
 CYCLE_PERIOD = 15 #seconds
 
 
-def sendUDP(linear_light_array, ns):
+def sendUDP(linear_light_array, ns, music_seq_length):
     msg = np.zeros((BUFFER_SIZE,), dtype=np.uint8)
     msg[0:(N*N*3)] = linear_light_array
     index = N*N*3
@@ -27,11 +27,11 @@ def sendUDP(linear_light_array, ns):
         msg[index] = n.pitch
         msg[index+1] = n.velocity
         try:
-            msg[index+2] = np.uint8(n.start_time * 8.0)
+            msg[index+2] = np.uint8(n.start_time * 2048. / music_seq_length)
         except:
             msg[index+2] = 0
         try:
-            msg[index+3] = np.uint8(min(n.end_time * 8.0,255))
+            msg[index+3] = np.uint8(min(n.end_time * 2048. / music_seq_length,255))
         except:
             msg[index+3] = 255
         index += 4
@@ -196,7 +196,7 @@ class GameOfLife:
             current_time = time.clock()        
             if (current_time - last_frame_time > self.frame_period):
                 #time to send info
-                sendUDP(self.grid_linear_color_array.copy(), self.notes)
+                sendUDP(self.grid_linear_color_array.copy(), self.notes, self.music_model.music_seq_length)
 
                 #get the next cycle of the game
                 self.grid = self.nextgrid.copy()

@@ -33,7 +33,7 @@ FLAGS = flags.FLAGS
 cwd = os.getcwd()
 if os.name == 'nt':
     flags.DEFINE_string(
-        'checkpoint_file', 'C:\\Users\\Mochi\\Downloads\\hierdec-mel_16bar.tar',
+        'checkpoint_file', 'C:\\Users\\Mochi\\Downloads\\cat-mel_2bar_big.tar',
         'Path to the checkpoint file. run_dir will take priority over this flag.')
 else:
     flags.DEFINE_string(
@@ -46,7 +46,7 @@ flags.DEFINE_string(
     'output_dir', cwd,
     'The directory where MIDI files will be saved to.')
 flags.DEFINE_string(
-    'config', 'hierdec-mel_16bar',
+    'config', 'cat-mel_2bar_big',
     'The name of the config to use.')
 flags.DEFINE_string(
     'mode', 'sample',
@@ -117,6 +117,7 @@ class Life2Music:
             config, batch_size=min(FLAGS.max_batch_size, FLAGS.num_outputs),
             checkpoint_dir_or_path=checkpoint_dir_or_path)
         self.music_vae_z_size=config.hparams.z_size
+        self.music_squence_length = config.hparams.max_seq_len
         
         self.gol_bvae_z_size = latentSize
         gol_encoder = OptimalEncoder(inputShape, batchSize, latentSize, intermediateSize, 'vae', beta=69, capacity=15, randomSample=True)
