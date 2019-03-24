@@ -47,9 +47,9 @@ def decodeUDP(msg):
             #look for 4 0s in a row
             break
         ns_pitch.append(msg[index])
-        ns_velocity.append(msg[index])
-        ns_start_time.append(msg[index]) # out of 255
-        ns_end_time.append(msg[index]) # out of 255
+        ns_velocity.append(msg[index+1])
+        ns_start_time.append(msg[index+2]) # out of 255
+        ns_end_time.append(msg[index+3]) # out of 255
         index += 4
     #print(index)
     return linear_array, ns_pitch, ns_velocity, ns_start_time, ns_end_time
