@@ -88,6 +88,7 @@ class MusicVAE:
             config, batch_size=min(FLAGS.max_batch_size, FLAGS.num_outputs),
             checkpoint_dir_or_path=checkpoint_dir_or_path)
         self.z_size=config.hparams.z_size
+        self.max_seq_len = config.max_seq_len
         
     def decode_model(self,z):
         results = self.model.decode(

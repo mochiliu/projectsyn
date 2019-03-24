@@ -9,60 +9,37 @@ from music_vae_generate_minimal import MusicVAE
 
 UDP_IP = "192.168.1.247"
 UDP_PORT = 5005
-BUFFER_SIZE = 3000
+BUFFER_SIZE = 3200
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 IMG_SIZE = 32
 N = 30
 
-#presets
-SCALE = 'MAJORPENT'
-#piano(0,0) rhodesep(0,4) legendep(0,5) glockenspiel (0,9) vibraphone (0,11) xylophone (0,13) tubularbells (0,14) 
-        #percussive organ (0,17) churchorgan (0,19) accordian (0,21) gitar (0,25) bass gitar (0,34) synth bass (0,38) violin (0,40) strings (0,48) ahhchoir (0,52) 
-        #trumpet (0,56) tuba (0,58) brasssection (0,61)
-FRAMERATE = 3 #Hz
-MAXVELOCITY = 100
-# adding music componet
-SCALES = {'CMAJOR': [0,2,4,5,7,9,11],
-          'BLUES': [0,3,5,6,7,10,11],
-          'MAJORPENT': [0,2,4,7,11],
-          'MINORPENT': [0,3,5,7,10],
-          'JAZZY': [0,2,4,6,8,10],
-          'INSEN': [0,1,5,7,10],
-          'HIRAJOSHI': [0,1,5,7,9],
-          'THIRDS': [0,4,2,5,4,7,5,9,7,11,13,12],
-          'CHROMATIC': [0,1,2,3,4,5,6,7,8,9,10,11]
-          }
-OFFSET = 0 #keys on midi offset
 
-def sendUDP(linear_light_array, keys_on, keys_off):
+CYCLE_PERIOD = 10 #seconds
+
+
+def sendUDP(linear_light_array, ns, seq_length):
     msg = np.zeros((BUFFER_SIZE,), dtype=np.uint8)
     msg[0:(N*N*3)] = linear_light_array
     index = N*N*3
-    for pitch, velocity in keys_on:
-        msg[index] = pitch
-        msg[index+1] = velocity
-        index += 2
-    index += 2 #skip two spaces as signifier that keys_on is done
-    for pitch, velocity in keys_off:
-        msg[index] = pitch
-        msg[index+1] = velocity
-        index += 2
-    #watch for overflow error?
-    print(keys_on)
-    #sock.sendto(msg, (UDP_IP, UDP_PORT))
-
-def highlight_linear_color_array(N, linear_array, highlightx):
-    pixel_index = 0
-    for x in range(N):
-        for y in range(N):
-            if x == highlightx:
-                if not (linear_array[pixel_index] > 0 or linear_array[pixel_index+1] > 0 or linear_array[pixel_index+2] > 0):
-                    linear_array[pixel_index] = 50
-                    linear_array[pixel_index+1] = 50
-                    linear_array[pixel_index+2] = 50
-            pixel_index += 3
-    return linear_array
+    for n in ns:
+        msg[index] = n.pitch
+        msg[index+1] = n.velocity
+        try:
+            msg[index+2] = n.start_time * (256 / seq_length)
+        except:
+            msg[index+2] = 0
+        try:
+            msg[index+3] = n.end_time * (256 / seq_length)
+        except:
+            msg[index+3] = seq_length
+        index += 4
+        if index >= BUFFER_SIZE:
+            break
+        
+    #print(keys_on)
+    sock.sendto(msg, (UDP_IP, UDP_PORT))
 
 def grid_to_linear_color_array(grid):
     N = len(grid)
@@ -200,53 +177,38 @@ def grid2img(grid, img_size, colorscheme='soft'):
     img[:,img_size-1,:] = img[:,1,:]
     return img
 
+
 class GameOfLife:
-    def __init__(self, frame_rate=10):
+    def __init__(self, frame_period=10):
         self.N = N
-        self.frame_period = 1.0 / frame_rate 
+        self.frame_period = frame_period
         self.grid = randomGrid(self.N)
         self.nextgrid = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-        self.scale = SCALES[SCALE] # Pick a scale from above or manufacture your own
         self.music_model = MusicVAE()
         self.notes = self.music_model.random_sample_model()
-        self.interp_frame_count = len(self.notes) # how many notes in music sequence
         
         
     def start_game(self, running):
-        current_interpframe = 0
         last_frame_time = time.clock()
         
-        last_keys = []
-        keys = []
         while running.is_set():
             current_time = time.clock()        
             if (current_time - last_frame_time > self.frame_period):
-                #time to update light board
-                if current_interpframe >= self.interp_frame_count:
-                    #get the next cycle of the game
-                    self.grid = self.nextgrid.copy()
-                    self.nextgrid = update(self.grid)
-                    self.notes = self.music_model.random_sample_model() #need to be threaded?
-                    self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
-                    self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-                    single_color_linear_array = self.grid_linear_color_array.copy()
-                    current_interpframe = 0
-                    
-                #time to update music
-                last_keys = keys.copy()
-                keys = [(self.notes[current_interpframe].pitch, self.notes[current_interpframe].velocity)]
-                single_color_linear_array = highlight_linear_color_array(self.N, self.grid_linear_color_array.copy(), max(0, current_interpframe-1))
-                    
-                sendUDP(single_color_linear_array, keys, last_keys)
-                last_frame_time = current_time
-                current_interpframe += 1
+                #time to send info
+                sendUDP(self.grid_linear_color_array.copy(), self.notes, self.music_model.max_seq_len)
 
-
+                #get the next cycle of the game
+                self.grid = self.nextgrid.copy()
+                self.nextgrid = update(self.grid)
+                self.notes = self.music_model.random_sample_model() #need to be threaded?
+                self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
+                self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
+                
 # call main 
 if __name__ == '__main__': 
     running = threading.Event()
-    game = GameOfLife(FRAMERATE)
+    game = GameOfLife(CYCLE_PERIOD)
     running.set()
     game.start_game(running)
