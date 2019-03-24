@@ -51,7 +51,7 @@ def decodeUDP(msg):
         ns_start_time.append(msg[index]) # out of 255
         ns_end_time.append(msg[index]) # out of 255
         index += 4
-    print(index)
+    #print(index)
     return linear_array, ns_pitch, ns_velocity, ns_start_time, ns_end_time
 
 msg = []
@@ -82,6 +82,7 @@ while True:
         on_notes = np.where(ns_start_time == note_sequence_index)[0]
         off_notes = np.where(ns_end_time == note_sequence_index)[0]
         for on_note in on_notes:
+            print(ns_pitch[on_note])
             fs.noteon(0, ns_pitch[on_note], ns_velocity[on_note])
         for off_note in off_notes:
             fs.noteoff(0, ns_pitch[off_note])
