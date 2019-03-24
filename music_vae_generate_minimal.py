@@ -42,7 +42,6 @@ else:
 flags.DEFINE_string(
     'run_dir', None,
     'Path to the directory where the latest checkpoint will be loaded from.')
-
 flags.DEFINE_string(
     'output_dir', cwd,
     'The directory where MIDI files will be saved to.')
@@ -67,12 +66,12 @@ flags.DEFINE_string(
     'The threshold for what messages will be logged: '
     'DEBUG, INFO, WARN, ERROR, or FATAL.')
 
-logging.set_verbosity(FLAGS.log)
-config_map = configs.CONFIG_MAP
-  
 if FLAGS.run_dir is None == FLAGS.checkpoint_file is None:
     raise ValueError('Exactly one of `--run_dir` or `--checkpoint_file` must be specified.')
 
+logging.set_verbosity(FLAGS.log)
+config_map = configs.CONFIG_MAP
+  
 if FLAGS.config not in config_map:
     raise ValueError('Invalid config name: %s' % FLAGS.config)
 config = config_map[FLAGS.config]
@@ -81,27 +80,31 @@ config.data_converter.max_tensors_per_item = None
 
 logging.info('Loading model...')
 checkpoint_dir_or_path = os.path.expanduser(FLAGS.checkpoint_file)
-model = TrainedModel(
-    config, batch_size=min(FLAGS.max_batch_size, FLAGS.num_outputs),
-    checkpoint_dir_or_path=checkpoint_dir_or_path)
-    
-z_size=config.hparams.z_size
 
-def decode_model(z):
-    results = model.decode(
-        length=config.hparams.max_seq_len,
-        z=z,
-        temperature=FLAGS.temperature)
-    for i, ns in enumerate(results):
-        return ns.notes
-    
-def random_sample_model():
-    z=np.random.normal(size=(1,z_size)) #random z
-    ns = decode_model(z)
-    return ns
+
+class MusicVAE:
+    def __init__(self):
+        self.model = TrainedModel(
+            config, batch_size=min(FLAGS.max_batch_size, FLAGS.num_outputs),
+            checkpoint_dir_or_path=checkpoint_dir_or_path)
+        self.z_size=config.hparams.z_size
+        
+    def decode_model(self,z):
+        results = self.model.decode(
+            length=config.hparams.max_seq_len,
+            z=z,
+            temperature=FLAGS.temperature)
+        for i, ns in enumerate(results):
+            return ns.notes
+        
+    def random_sample_model(self):
+        z=np.random.normal(size=(1,self.z_size)) #random z
+        ns = self.decode_model(z)
+        return ns
 
 if __name__ == '__main__':
-    ns = random_sample_model()
+    test = MusicVAE()
+    ns = test.random_sample_model()
     print(ns)
     #exit()
     

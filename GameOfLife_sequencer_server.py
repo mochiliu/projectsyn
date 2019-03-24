@@ -3,8 +3,6 @@ import numpy as np
 import time
 import threading
 import socket
-from music_vae_generate_minimal import MusicVAE
-
 #from PIL import Image
 
 UDP_IP = "192.168.1.247"
@@ -49,8 +47,8 @@ def sendUDP(linear_light_array, keys_on, keys_off):
         msg[index+1] = velocity
         index += 2
     #watch for overflow error?
-    print(keys_on)
-    #sock.sendto(msg, (UDP_IP, UDP_PORT))
+    #print(len(msg))
+    sock.sendto(msg, (UDP_IP, UDP_PORT))
 
 def highlight_linear_color_array(N, linear_array, highlightx):
     pixel_index = 0
@@ -124,6 +122,35 @@ def addGlider(i, j, grid):
     glider = np.rot90(glider, rotation_number)
     grid[i:i+3, j:j+3] = glider 
 
+def addGosperGliderGun(i, j, grid): 
+	"""adds a Gosper Glider Gun with top left 
+	cell at (i, j)"""
+	gun = np.zeros(11*38).reshape(11, 38) 
+
+	gun[5][1] = gun[5][2] = 255
+	gun[6][1] = gun[6][2] = 255
+
+	gun[3][13] = gun[3][14] = 255
+	gun[4][12] = gun[4][16] = 255
+	gun[5][11] = gun[5][17] = 255
+	gun[6][11] = gun[6][15] = gun[6][17] = gun[6][18] = 255
+	gun[7][11] = gun[7][17] = 255
+	gun[8][12] = gun[8][16] = 255
+	gun[9][13] = gun[9][14] = 255
+
+	gun[1][25] = 255
+	gun[2][23] = gun[2][25] = 255
+	gun[3][21] = gun[3][22] = 255
+	gun[4][21] = gun[4][22] = 255
+	gun[5][21] = gun[5][22] = 255
+	gun[6][23] = gun[6][25] = 255
+	gun[7][25] = 255
+
+	gun[3][35] = gun[3][36] = 255
+	gun[4][35] = gun[4][36] = 255
+
+	grid[i:i+11, j:j+38] = gun 
+
 def update(grid): 
     # copy grid since we require 8 neighbors 
     # for calculation and we go line by line 
@@ -158,8 +185,17 @@ def update(grid):
                     if total == 3 or total == 6:  #hi-life is with 3 or 6
                         old_colors = eight_neighbors[nonzero_array]
                         newGrid[i, j] = get_new_color(old_colors, np.random.uniform(low=0, high=10))
+                        
+    #music
+    notes = {}
+    for x in range(N): 
+        for y in range(N): 
+            if grid[x,y] > 0:
+                if x not in notes:
+                    notes[x] = []
+                notes[x].append((y+OFFSET, grid[x,y])) #x is in time, tuple is (note, color)
         
-    return newGrid
+    return newGrid, notes
 
 def grid2colorgrid(grid, colorscheme):
     N = len(grid)
@@ -201,19 +237,18 @@ def grid2img(grid, img_size, colorscheme='soft'):
     return img
 
 class GameOfLife:
-    def __init__(self, frame_rate=10):
+    def __init__(self, frame_rate=10, music=True):
         self.N = N
         self.frame_period = 1.0 / frame_rate 
+        self.interp_frame_count = self.N # how many notes in music sequence
+        
         self.grid = randomGrid(self.N)
-        self.nextgrid = update(self.grid)
+        self.nextgrid, self.notes = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
         self.scale = SCALES[SCALE] # Pick a scale from above or manufacture your own
-        self.music_model = MusicVAE()
-        self.notes = self.music_model.random_sample_model()
-        self.interp_frame_count = len(self.notes) # how many notes in music sequence
-        
-        
+        self.music = music
+            
     def start_game(self, running):
         current_interpframe = 0
         last_frame_time = time.clock()
@@ -227,26 +262,43 @@ class GameOfLife:
                 if current_interpframe >= self.interp_frame_count:
                     #get the next cycle of the game
                     self.grid = self.nextgrid.copy()
-                    self.nextgrid = update(self.grid)
-                    self.notes = self.music_model.random_sample_model() #need to be threaded?
+                    self.nextgrid, self.notes = update(self.grid)
                     self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
                     self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
                     single_color_linear_array = self.grid_linear_color_array.copy()
                     current_interpframe = 0
+                    #print('next cycle')
                     
-                #time to update music
-                last_keys = keys.copy()
-                keys = [(self.notes[current_interpframe].pitch, self.notes[current_interpframe].velocity)]
-                single_color_linear_array = highlight_linear_color_array(self.N, self.grid_linear_color_array.copy(), max(0, current_interpframe-1))
+                if self.music:
+                    #time to update music
+                    last_keys = keys.copy()
+                    keys = []
+                    if current_interpframe in self.notes:
+                        for note, color in self.notes[current_interpframe]:
+                            pitch = round(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))])) #convert note into key using the prechoosen scale
+                            veolcity = int(round(np.mean(rgb_int2tuple(color))/255*MAXVELOCITY))
+                            keys.append((pitch, veolcity))
+                            
+                    single_color_linear_array = highlight_linear_color_array(self.N, self.grid_linear_color_array.copy(), max(0, current_interpframe-1))
                     
                 sendUDP(single_color_linear_array, keys, last_keys)
                 last_frame_time = current_time
                 current_interpframe += 1
-
+                
+                #debug
+#                img_array = grid2img(self.grid, IMG_SIZE)
+#                img_array = np.uint8(img_array* 255) # convert to regular image values
+#                img = Image.fromarray(img_array)
+#                img.show()
+#                running.clear()
+        #if self.music:
+            #turn off the last set of keys before aborting
+            #STREAM END
+            #sendUDP(np.zeros((self.N*self.N*3,), dtype=np.uint8), [], last_keys)
 
 # call main 
 if __name__ == '__main__': 
     running = threading.Event()
-    game = GameOfLife(FRAMERATE)
+    game = GameOfLife(FRAMERATE,music=True)
     running.set()
     game.start_game(running)
