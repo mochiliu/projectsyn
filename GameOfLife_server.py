@@ -38,7 +38,7 @@ def sendUDP(linear_light_array, ns, seq_length):
         if index >= BUFFER_SIZE:
             break
         
-    #print(keys_on)
+    print(index)
     sock.sendto(msg, (UDP_IP, UDP_PORT))
 
 def grid_to_linear_color_array(grid):
@@ -205,7 +205,7 @@ class GameOfLife:
                 self.notes = self.music_model.random_sample_model() #need to be threaded?
                 self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
                 self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
-                
+                last_frame_time = current_time
 # call main 
 if __name__ == '__main__': 
     running = threading.Event()

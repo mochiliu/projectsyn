@@ -51,6 +51,7 @@ def decodeUDP(msg):
         ns_start_time.append(msg[index]) # out of 255
         ns_end_time.append(msg[index]) # out of 255
         index += 4
+    print(index)
     return linear_array, ns_pitch, ns_velocity, ns_start_time, ns_end_time
 
 msg = []
