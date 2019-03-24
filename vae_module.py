@@ -59,7 +59,7 @@ flags.DEFINE_integer(
     'max_batch_size', 1,
     'The maximum batch size to use. Decrease if you are seeing an OOM.')
 flags.DEFINE_float(
-    'temperature', 0.5,
+    'temperature', 0,
     'The randomness of the decoding process.')
 flags.DEFINE_string(
     'log', 'INFO',
@@ -127,9 +127,13 @@ class Life2Music:
         self.gol_bvae.encoder.load_weights(gol_encoder_model_path)
         self.random_subspace = rand_subspace(self.gol_bvae_z_size, self.music_vae_z_size)
         
+        self.music_seed_z = np.random.normal(size=self.music_vae_z_size)
+        self.scaling = 0.1
+        
     def make_music_from_GOL(self, img):
         lifez = self.encode_GOL(img)
-        music_z = np.dot(lifez,self.random_subspace) #maybe scale?
+        music_z_delta = np.dot(lifez,self.random_subspace) #maybe scale?
+        music_z = self.scaling*music_z_delta + self.music_seed_z 
         return self.decode_MVAE(music_z)
         
     def encode_GOL(self, img):

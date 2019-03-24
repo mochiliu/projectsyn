@@ -16,7 +16,7 @@ IMG_SIZE = 32
 N = 30
 
 
-CYCLE_PERIOD = 15 #seconds
+CYCLE_PERIOD = 5 #seconds
 
 
 def sendUDP(linear_light_array, ns, music_seq_length):
