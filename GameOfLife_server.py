@@ -196,7 +196,7 @@ class GameOfLife:
             current_time = time.clock()        
             if (current_time - last_frame_time > self.frame_period):
                 #time to send info
-                sendUDP(self.grid_linear_color_array.copy(), self.notes, self.music_model.music_seq_length)
+                sendUDP(self.grid_linear_color_array.copy(), self.notes, self.music_model.music_squence_length)
 
                 #get the next cycle of the game
                 self.grid = self.nextgrid.copy()
