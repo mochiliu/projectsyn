@@ -59,7 +59,7 @@ flags.DEFINE_integer(
     'max_batch_size', 1,
     'The maximum batch size to use. Decrease if you are seeing an OOM.')
 flags.DEFINE_float(
-    'temperature', 0.5,
+    'temperature', 0.2,
     'The randomness of the decoding process.')
 flags.DEFINE_string(
     'log', 'INFO',
@@ -128,7 +128,7 @@ class Life2Music:
         self.random_subspace = rand_subspace(self.gol_bvae_z_size, self.music_vae_z_size)
         
         self.music_seed_z = np.random.normal(size=self.music_vae_z_size)
-        self.scaling = 1
+        self.scaling = 0.5
         
     def make_music_from_GOL(self, img):
         lifez = self.encode_GOL(img)
