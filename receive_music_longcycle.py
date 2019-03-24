@@ -9,7 +9,7 @@ UDP_IP = "192.168.1.247"
 UDP_PORT = 5005
 BUFFER_SIZE = 3200
 N = 30
-CYCLE_PERIOD = 10 #seconds
+CYCLE_PERIOD = 10. #seconds
 NOTE_PERIOD = CYCLE_PERIOD / 256
 #FRAMERATE = 3 #Hz
 INSTRUMENT = 1
@@ -93,10 +93,6 @@ while True:
         #cycle is done, load the next game board
         #unload msg
         linear_array, ns_pitch, ns_velocity, ns_start_time, ns_end_time = decodeUDP(msg)
-        print(ns_pitch)
-        print(ns_velocity)
-        print(ns_start_time)
-        print(ns_end_time)
         disp.set_from_array(linear_array)
         msg = []
         note_sequence_index = 0
