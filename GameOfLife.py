@@ -35,7 +35,7 @@ def play_midi(last_keys, keys, fs):
         
     for pitch, v in keys:
         # turn on the next set of keys
-        fs.noteon(0, pitch, velocity) #instument keys, and velocity
+        fs.noteon(0, pitch, v) #instument keys, and velocity
 
 
 def highlight_linear_color_array(N, linear_array, highlightx):
