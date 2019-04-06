@@ -33,7 +33,7 @@ FLAGS = flags.FLAGS
 cwd = os.getcwd()
 if os.name == 'nt':
     flags.DEFINE_string(
-        'checkpoint_file', 'C:\\Users\\Mochi\\Downloads\\cat-mel_2bar_big.tar',
+        'checkpoint_file', 'C:\\Users\\Mochi\\Downloads\\cat-drums_2bar_small.hikl.tar',
         'Path to the checkpoint file. run_dir will take priority over this flag.')
 else:
     flags.DEFINE_string(
@@ -46,7 +46,8 @@ flags.DEFINE_string(
     'output_dir', cwd,
     'The directory where MIDI files will be saved to.')
 flags.DEFINE_string(
-    'config', 'cat-mel_2bar_big',
+#    'config', 'cat-mel_2bar_big',
+    'config', 'cat-drums_2bar_small',
     'The name of the config to use.')
 flags.DEFINE_string(
     'mode', 'sample',
@@ -158,7 +159,7 @@ class Life2Music:
 
 if __name__ == '__main__':
     test = Life2Music()
-    ns = test.make_music_from_GOL(np.zeros((32,32,3), dtype=np.float32))
+    ns = test.random_music_sample()
     print(ns)
     #exit()
     

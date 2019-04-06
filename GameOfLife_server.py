@@ -3,7 +3,7 @@ import numpy as np
 import time
 import threading
 import socket
-from vae_module import Life2Music
+from vae_module_drums import Life2Music
 
 #from PIL import Image
 
