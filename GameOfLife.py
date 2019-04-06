@@ -8,10 +8,13 @@ import fluidsynth
 
 #presets
 SCALE = 'MAJORPENT'
-INSTRUMENT = 11
+INSTRUMENT = 0
+BANK = 128 # (128,0) for precussion (0, INSTRUMENT) for melody
+
 #piano(0,0) rhodesep(0,4) legendep(0,5) glockenspiel (0,9) vibraphone (0,11) xylophone (0,13) tubularbells (0,14) 
         #percussive organ (0,17) churchorgan (0,19) accordian (0,21) gitar (0,25) bass gitar (0,34) synth bass (0,38) violin (0,40) strings (0,48) ahhchoir (0,52) 
-        #trumpet (0,56) tuba (0,58) brasssection (0,61)
+        #trumpet (0,56) tuba (0,58) brasssection (0,61) oboe (0,68) pan flute (0,75) goblin (0,101) banjo (0,105) fiddle (0,110) seashore (0,122) birdtweet (0,123) 
+        #out of index (0,128) see General MIDI for full list
 FRAMERATE = 10 #Hz
 MAXVELOCITY = 100
 # adding music componet
@@ -203,8 +206,8 @@ class GameOfLife:
     def start_game(self, running):
         self.fs.start(driver='alsa')
         sfid = self.fs.sfload('/usr/share/sounds/sf2/FluidR3_GM.sf2')
-        self.fs.program_select(0, sfid, 0, INSTRUMENT) #instrument selection
-        #self.fs.program_select(0, sfid, 0, 0) 
+        self.fs.program_select(0, sfid, BANK, INSTRUMENT) #instrument selection
+        #self.fs.program_select(0, sfid, 10, 0) 
         print(self.fs.channel_info(0))
         self.stop_requested = False
         current_interpframe = 0
