@@ -1,43 +1,41 @@
-# Python code to implement Conway's Game Of Life 
+# Python code to implement Conway's Game Of Life, to be played locally or remotely.
 import numpy as np 
 import time
 import threading
 import socket
-from vae_module_drums import Life2Music
+#from vae_module_drums import Life2Music
+from vae_module import Life2Music
+import pygame
+import pygame.midi
 
 #from PIL import Image
+
+is_local = True;
+if is_local:
+    import pygame_display_init
+
+
+IMG_SIZE = 32
+N = 30
+CYCLE_PERIOD = 2 #seconds
+NOTE_PERIOD = CYCLE_PERIOD / 256
 
 UDP_IP = "192.168.1.247"
 UDP_PORT = 5005
 BUFFER_SIZE = 3200
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-IMG_SIZE = 32
-N = 30
-
-
-CYCLE_PERIOD = 4 #seconds
-
-
-def sendUDP(linear_light_array, ns, music_seq_length):
+def sendUDP(sock, linear_light_array, ns):
     msg = np.zeros((BUFFER_SIZE,), dtype=np.uint8)
     msg[0:(N*N*3)] = linear_light_array
     index = N*N*3
     for n in ns:
         msg[index] = n.pitch
         msg[index+1] = n.velocity
-        try:
-            msg[index+2] = np.uint8(n.start_time * 2048. / music_seq_length)
-        except:
-            msg[index+2] = 0
-        try:
-            msg[index+3] = np.uint8(min(n.end_time * 2048. / music_seq_length,255))
-        except:
-            msg[index+3] = 255
+        msg[index+2] = n.start_time
+        msg[index+3] = n.end_time
         index += 4
         if index >= BUFFER_SIZE:
             break
-        
     sock.sendto(msg, (UDP_IP, UDP_PORT))
 
 def grid_to_linear_color_array(grid):
@@ -176,6 +174,52 @@ def grid2img(grid, img_size, colorscheme='soft'):
     img[:,img_size-1,:] = img[:,1,:]
     return img
 
+def do_nothing():
+    return True
+
+def local_GOL_display(running, midi_out, screen, gol_board, magnifcation, ns):
+    #display the board
+    magnified_board = np.repeat(gol_board, magnifcation, axis=0)
+    magnified_board = np.repeat(magnified_board, magnifcation, axis=1)  
+    
+    screen.fill((0,0,0))
+    pxarray = pygame.PixelArray(screen)
+    for x in range(len(pxarray)):
+        for y in range(len(pxarray)):
+            pxarray[x,y] = rgb_int2tuple(magnified_board[x,y])
+    del pxarray
+    pygame.display.update()
+
+    
+    #play the instruments
+    last_note_time = 0
+    ns_pitch = []
+    ns_velocity = []
+    ns_start_time = []
+    ns_end_time = []
+    for n in ns:
+        ns_pitch.append(n.pitch)
+        ns_velocity.append(n.velocity)
+        ns_start_time.append(n.start_time) # out of 255
+        ns_end_time.append(n.end_time) # out of 255
+    
+    ns_pitch = np.asarray(ns_pitch)
+    ns_velocity = np.asarray(ns_velocity)
+    ns_start_time = np.asarray(ns_start_time)
+    ns_end_time = np.asarray(ns_end_time)
+    
+    note_sequence_index = 0
+    while running.is_set() and note_sequence_index < 256:
+        current_time = time.clock()
+        if current_time - last_note_time > NOTE_PERIOD:
+            on_notes = np.where(ns_start_time == note_sequence_index)[0]
+            off_notes = np.where(ns_end_time == note_sequence_index)[0]
+            for on_note in on_notes:
+                midi_out.note_on(ns_pitch[on_note],ns_velocity[on_note])
+            for off_note in off_notes:
+                midi_out.note_off(ns_pitch[off_note], 127)
+            last_note_time = current_time        
+            note_sequence_index += 1
 
 class GameOfLife:
     def __init__(self, frame_period=10):
@@ -187,17 +231,47 @@ class GameOfLife:
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
         self.music_model = Life2Music()
         self.notes = self.music_model.make_music_from_GOL(grid2img(self.grid,IMG_SIZE))
-        
+        self.magnifcation = 5
         
     def start_game(self, running):
         last_frame_time = time.clock()
+
+          
+        #start pygame if islocal
+        if is_local:
+            pygame.init()
+            screen = pygame.display.set_mode((self.N*self.magnifcation,self.N*self.magnifcation), pygame.HWSURFACE)
+            pygame.display.set_caption('Pygame')
+            pygame.mouse.set_visible(0)
+            
+            
+            instrument = 0 #piano
+            pygame.midi.init()
+            port = pygame.midi.get_default_output_id()
+            print ("using output_id :%s:" % port)
+            midi_out = pygame.midi.Output(port, 0)
+            midi_out.set_instrument(instrument)
+            background_running = threading.Event()
+            background_thread = threading.Thread(target=do_nothing, args=[])
+            background_thread.start()
+        else:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
         
         while running.is_set():
             current_time = time.clock()        
             if (current_time - last_frame_time > self.frame_period):
-                #time to send info
-                sendUDP(self.grid_linear_color_array.copy(), self.notes, self.music_model.music_squence_length)
-
+                #time to send info or update the pygame display
+                if is_local:
+                    #finish the other thread first
+                    #background_running.clear()
+                    background_thread.join()
+                    # use a separate thread to display the GOL board and play notes
+                    background_running.set()
+                    background_thread = threading.Thread(target=local_GOL_display, args=[background_running, midi_out, screen, self.grid, self.magnifcation, self.notes])
+                    background_thread.start()
+                else:
+                    sendUDP(sock, self.grid_linear_color_array.copy(), self.notes)
+                
                 #get the next cycle of the game
                 self.grid = self.nextgrid.copy()
                 self.nextgrid = update(self.grid)
@@ -205,6 +279,11 @@ class GameOfLife:
                 self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
                 self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
                 last_frame_time = current_time
+            
+
+        if is_local:
+            del midi_out
+            pygame.midi.quit()
 # call main 
 if __name__ == '__main__': 
     running = threading.Event()

@@ -149,7 +149,11 @@ class Life2Music:
             z=z,
             temperature=FLAGS.temperature)
         for i, ns in enumerate(results):
-            return ns.notes
+            nns = ns.notes
+            for n in nns:
+                n.start_time = np.uint8(max(n.start_time * 2048. / self.music_squence_length, 0))
+                n.end_time = np.uint8(min(n.end_time * 2048. / self.music_squence_length, 255))
+            return nns
         
     def random_music_sample(self):
         z=np.random.normal(size=(1,self.music_vae_z_size)) #random z

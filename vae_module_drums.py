@@ -85,15 +85,16 @@ class AutoEncoder(object):
         self.decoder = decoderArchitecture.model
         self.ae = Model(self.encoder.inputs, self.decoder(self.encoder.outputs))
         
-fit_path = 'C:\\Users\\Mochi\\Dropbox\\personal stuff\\BVAE-tf\\output_models\\'
-epoch_number = '100'
+fit_path = 'C:\\Users\\Mochi\\Dropbox\\personal stuff\\BVAE-tf\\output_models\\1000_iterations\\'
+epoch_number = '500'
 
 gol_encoder_model_path = os.path.join(fit_path + epoch_number + '_encoder.h5')
 #gol_decoder_model_path = os.path.join(fit_path + epoch_number + '_decoder.h5')
 batchSize = 4*64
 inputShape = (32, 32, 3)
 intermediateSize = 900
-latentSize = 32
+#latentSize = 32
+latentSize = 128
 
 #bvae.decoder.load_weights(decoder_model_path)
 
@@ -128,14 +129,19 @@ class Life2Music:
         self.gol_bvae.encoder.load_weights(gol_encoder_model_path)
         self.random_subspace = rand_subspace(self.gol_bvae_z_size, self.music_vae_z_size)
         
-        self.music_seed_z = np.random.normal(size=self.music_vae_z_size)
-        self.scaling = 0.5
+        self.music_z = np.random.normal(size=self.music_vae_z_size)
+        self.gol_z = 0
+        self.scaling = 0.1
         
     def make_music_from_GOL(self, img):
         lifez = self.encode_GOL(img)
-        music_z_delta = np.dot(lifez,self.random_subspace) #maybe scale?
-        music_z = self.scaling*music_z_delta + self.music_seed_z 
-        return self.decode_MVAE(music_z)
+        #music_z_delta = np.dot(lifez,self.random_subspace) #maybe scale?
+        #music_z = self.scaling*music_z_delta + self.music_z 
+        # double derivative
+        music_z_delta = np.dot(lifez - self.gol_z, self.random_subspace)
+        self.gol_z = lifez
+        self.music_z = self.scaling*music_z_delta + self.music_z
+        return self.decode_MVAE(self.music_z)
         
     def encode_GOL(self, img):
         img_shape = np.shape(img)
@@ -150,7 +156,11 @@ class Life2Music:
             z=z,
             temperature=FLAGS.temperature)
         for i, ns in enumerate(results):
-            return ns.notes
+            nns = ns.notes
+            for n in nns:
+                n.start_time = np.uint8(n.start_time * 2048. / self.music_squence_length)
+                n.end_time = np.uint8(min(n.end_time * 2048. / self.music_squence_length, 255))
+            return nns
         
     def random_music_sample(self):
         z=np.random.normal(size=(1,self.music_vae_z_size)) #random z
