@@ -165,7 +165,7 @@ def on_message(client, userdata, msg):
             light_state = light_states.ConstantDisplay
             set_power_state(light_state)
             set_color(real_color(current_color, current_brightness))
-        elif msg.payload == b'Game of LIfe':
+        elif msg.payload == b'Game of Life':
             # start playing game of life
             light_state = light_states.PlayingGameOfLife
 
@@ -196,7 +196,6 @@ background_thread = None
 last_light_state = light_state
 
 while True:
-    #main loop, waiting until esc key press
     #keep checking if we swiched light states
     if last_light_state != light_state: 
         # transitioning states
@@ -205,9 +204,8 @@ while True:
             game_of_life = GameOfLife(disp, frame_rate)
             running.set()
             background_thread = threading.Thread(target=game_of_life.start_game, args=[running])
-            background_thread.daemon = True
             background_thread.start()
-        elif last_light_state == light_states.PlayingGameOfLife:
+        if last_light_state == light_states.PlayingGameOfLife:
             print('stopping game of life')
             running.clear()
             time.sleep(1)
