@@ -201,13 +201,18 @@ while True:
     if last_light_state != light_state: 
         # transitioning states
         if light_state == light_states.PlayingGameOfLife:
+            print('starting game of life')
             game_of_life = GameOfLife(disp, frame_rate)
             running.set()
             background_thread = threading.Thread(target=game_of_life.start_game, args=[running])
             background_thread.daemon = True
             background_thread.start()
         elif last_light_state == light_states.PlayingGameOfLife:
+            print('stopping game of life')
             running.clear()
+            time.sleep(1)
+            set_power_state(light_state)
+            set_color(real_color(current_color, current_brightness))
         last_light_state = light_state
 
 
