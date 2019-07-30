@@ -4,13 +4,27 @@ import numpy as np
 import RPi.GPIO as GPIO
 from enum import Enum
 from display import LEDdisplay
+from GameOfLife import GameOfLife
+import threading
+
+# wait for esc
+ESC = '\x1b'
+PY3K = sys.version_info >= (3,)
+if PY3K:
+    from msvcrt import kbhit, getwch as _getch
+else:
+    from msvcrt import kbhit, getch as _getch
+    
 
 broker="192.168.1.170"
 port=1883
 
+#ret= client.publish("linknodeR4bedroom/cmnd/Power1","TOGGLE")                   #publish for linknode
 
-topics = [("lightboard/#",0)] #QOS 0
+topics = [("board/#",0)] #QOS 0
 
+frame_rate = 10 #10 Hz           
+           
 class light_states(Enum):
     PowerOff = 0
     ConstantDisplay = 1
@@ -69,13 +83,19 @@ def publish_update(client):
     global light_state, current_color, current_brightness
 #    client.publish('lightboard/status', json.dumps(status_json_payload()))
     if light_state == light_states.PowerOff:
-        client.publish('lightboard/status', 'OFF')
-    else:
-        client.publish('lightboard/status', 'ON')
-    client.publish('lightboard/brightness/status', int(current_brightness))
+        client.publish('board/status', 'OFF')
+        client.publish('board/effect/status', 'Uniform')
+    elif light_state == light_states.ConstantDisplay:
+        client.publish('board/status', 'ON')
+        client.publish('board/effect/status', 'Uniform')
+    elif light_state == light_states.PlayingGameOfLife:
+        client.publish('board/status', 'ON')
+        client.publish('board/effect/status', 'Game of Life')
+        
+    client.publish('board/brightness/status', int(current_brightness))
 
     scaled_color = real_color(current_color, current_brightness)
-    client.publish('lightboard/rgb/status', str(scaled_color[0])+','+str(scaled_color[1])+','+str(scaled_color[2]))
+    client.publish('board/rgb/status', str(scaled_color[0])+','+str(scaled_color[1])+','+str(scaled_color[2]))
     
       
     
@@ -120,7 +140,7 @@ def on_subscribe(client, userdata, mid, granted_qos):             #create functi
 def on_message(client, userdata, msg):
     global light_state, current_color, current_brightness
     print(msg.topic+" "+str(msg.payload))
-    if msg.topic == "lightboard/switch":
+    if msg.topic == "board/switch":
         #lightboard on / off
         if msg.payload == b'ON':
             light_state = light_states.ConstantDisplay
@@ -131,22 +151,36 @@ def on_message(client, userdata, msg):
             set_power_state(light_state)
         publish_update(client)
             
-    elif msg.topic == "lightboard/brightness/set":
+    elif msg.topic == "board/brightness/set":
         # set the brightness
         decoded_payload = int(msg.payload.decode())
         set_brightness(decoded_payload)
         publish_update(client)
 
-    elif msg.topic == "lightboard/rgb/set":
+    elif msg.topic == "board/rgb/set":
         # set the color
         decoded_payload = msg.payload.decode()
         decoded_payload = decoded_payload.split(',')
         color = (int(decoded_payload[0]), int(decoded_payload[1]), int(decoded_payload[2]))
         set_color(color)
         publish_update(client)
+
+    elif msg.topic == "board/effect/set":
+        # set the effect
+        decoded_payload = msg.payload.decode()
+        if msg.payload == b'Uniform':
+            light_state = light_states.ConstantDisplay
+            set_power_state(light_state)
+            set_color(real_color(current_color, current_brightness))
+        elif msg.payload == b'Game of LIfe':
+            # start playing game of life
+            light_state = light_states.PlayingGameOfLife
+
+            
+        publish_update(client)
         
-    
-client= paho.Client("lightboard")                           #create client 
+        
+client= paho.Client("board")                           #create client 
 client.username_pw_set('hassio', 'projectsyn')
 
 client.on_connect = on_connect
@@ -162,13 +196,27 @@ except:
     print("can't connect")
     sys.exit(1)
     
-    
-#client.loop_start() #start loop
+client.loop_start() #start loop in background thread
 
-#        
-#time.sleep(1)
-#ret= client.publish("linknodeR4bedroom/cmnd/Power1","TOGGLE")                   #publish for linknode
+running = threading.Event()
+background_thread = None
+last_light_state = light_state
+
+while not kbhit() or _getch() != ESC:
+    #main loop, waiting until esc key press
+    #keep checking if we swiched light states
+    if last_light_state != light_state: 
+        # transitioning states
+        if light_state == light_states.PlayingGameOfLife:
+            game_of_life = GameOfLife(disp, frame_rate)
+            running.set()
+            background_thread = threading.Thread(target=game_of_life.start_game, args=[running])
+            background_thread.daemon = True
+            background_thread.start()
+        elif last_light_state == light_states.PlayingGameOfLife:
+            running.clear()
+        last_light_state = light_state
 
 
-client.loop_forever()
+#client.loop_forever()
 client.disconnect()
