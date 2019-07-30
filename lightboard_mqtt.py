@@ -7,13 +7,6 @@ from display import LEDdisplay
 from GameOfLife import GameOfLife
 import threading
 
-# wait for esc
-ESC = '\x1b'
-PY3K = sys.version_info >= (3,)
-if PY3K:
-    from msvcrt import kbhit, getwch as _getch
-else:
-    from msvcrt import kbhit, getch as _getch
     
 
 broker="192.168.1.170"
@@ -202,7 +195,7 @@ running = threading.Event()
 background_thread = None
 last_light_state = light_state
 
-while not kbhit() or _getch() != ESC:
+while True:
     #main loop, waiting until esc key press
     #keep checking if we swiched light states
     if last_light_state != light_state: 
