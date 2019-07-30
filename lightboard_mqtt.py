@@ -136,9 +136,10 @@ def on_message(client, userdata, msg):
     if msg.topic == "board/switch":
         #lightboard on / off
         if msg.payload == b'ON':
-            light_state = light_states.ConstantDisplay
-            set_power_state(light_state)
-            set_color(real_color(current_color, current_brightness))
+            if light_state == light_states.PowerOff:
+                light_state = light_states.ConstantDisplay
+                set_power_state(light_state)
+                set_color(real_color(current_color, current_brightness))
         elif msg.payload == b'OFF':
             light_state = light_states.PowerOff
             set_power_state(light_state)
@@ -180,8 +181,6 @@ client.on_connect = on_connect
 client.on_publish = on_publish                          #assign function to callback
 client.on_subscribe = on_subscribe
 client.on_message = on_message
-
-
 
 try:
     client.connect(broker,port)                                 #establish connection
