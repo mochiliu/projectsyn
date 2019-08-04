@@ -8,8 +8,8 @@ import fluidsynth
 
 #presets
 SCALE = 'MAJORPENT'
-INSTRUMENT = 0
-BANK = 128 # (128,0) for precussion (0, INSTRUMENT) for melody
+INSTRUMENT = 11
+BANK = 0 #128 # (128,0) for precussion (0, INSTRUMENT) for melody
 
 #piano(0,0) rhodesep(0,4) legendep(0,5) glockenspiel (0,9) vibraphone (0,11) xylophone (0,13) tubularbells (0,14) 
         #percussive organ (0,17) churchorgan (0,19) accordian (0,21) gitar (0,25) bass gitar (0,34) synth bass (0,38) violin (0,40) strings (0,48) ahhchoir (0,52) 
