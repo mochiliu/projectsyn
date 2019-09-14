@@ -1,10 +1,20 @@
 # Python code to implement Conway's Game Of Life 
 import numpy as np 
 import time
-from display import LEDdisplay
 import threading
 #import sys
-import fluidsynth
+import os
+is_windows_machine = False
+if os.name == 'nt':
+    is_windows_machine = True
+    
+if is_windows_machine:
+    import pygame
+    import pygame.midi
+    import pygame_display_init
+else:
+    import fluidsynth
+    from display import LEDdisplay
 
 #presets
 SCALE = 'MAJORPENT'
@@ -31,14 +41,34 @@ SCALES = {'CMAJOR': [0,2,4,5,7,9,11],
 OFFSET = 0 #keys on midi offset
 
 
-def play_midi(last_keys, keys, fs):
+def play_midi_fs(last_keys, keys, fs):
     for pitch, velocity in last_keys:
         # turn off the last set of keys
         fs.noteoff(0, pitch)
-        
     for pitch, v in keys:
         # turn on the next set of keys
         fs.noteon(0, pitch, v) #instument keys, and velocity
+
+def play_midi_pygame(last_keys, keys, midi_out):
+    for pitch, velocity in last_keys:
+        # turn off the last set of keys
+        midi_out.note_off(pitch, 127)        
+    for pitch, v in keys:
+        # turn on the next set of keys
+        midi_out.note_on(pitch, v)
+
+def local_GOL_display(screen, gol_board, magnifcation):
+    #display the board
+    magnified_board = np.repeat(gol_board, magnifcation, axis=0)
+    magnified_board = np.repeat(magnified_board, magnifcation, axis=1)  
+    
+    screen.fill((0,0,0))
+    pxarray = pygame.PixelArray(screen)
+    for x in range(len(pxarray)):
+        for y in range(len(pxarray)):
+            pxarray[x,y] = rgb_int2tuple(magnified_board[x,y])
+    del pxarray
+    pygame.display.update()
 
 
 def highlight_linear_color_array(N, linear_array, highlightx):
@@ -66,6 +96,14 @@ def grid_to_linear_color_array(grid):
             pixel_index += 1
     return linear_array
     
+def linear_color_array_to_grid(N, linear_array):
+    three_color_mat = np.reshape(linear_array, (N,N,3))
+    grid = np.zeros((N,N), dtype=int)
+    for i in range(N):
+        for j in range(N):
+            grid[i,j] = rgb2int(three_color_mat[i,j,0],three_color_mat[i,j,1],three_color_mat[i,j,2])
+    return grid
+
 def rgb_int2tuple(rgbint):
     return (rgbint // 256 // 256 % 256, rgbint // 256 % 256, rgbint % 256)
 
@@ -103,6 +141,13 @@ def randomGrid(N):
             if np.random.uniform() < 0.1:
                 # cell alive
                 grid[i,j] = int(np.random.uniform(low=1, high=(256*256*256)-1))
+    return grid
+
+def setGrid(N): 
+    """returns a grid of NxN random values"""
+    grid = np.ones((N,N), dtype=int)
+    grid[7:22, 7:22] = 0
+    grid = 255 * grid
     return grid
 
 def addGlider(i, j, grid): 
@@ -189,26 +234,43 @@ def update(grid):
     return newGrid, notes
 
 class GameOfLife:
-    def __init__(self, disp, frame_rate=10, music=True):
+    def __init__(self, disp, frame_rate=10, music=True, is_windows=False):
         self.disp = disp
         self.frame_period = 1.0 / frame_rate 
         self.N = 30
-        self.grid = randomGrid(self.N)
+        self.grid = setGrid(self.N)
         self.nextgrid, self.notes = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)
         self.interp_frame_count = 119
         self.note_length = self.frame_period * (self.interp_frame_count + 1) / self.N
         self.scale = SCALES[SCALE] # Pick a scale from above or manufacture your own
-        self.fs = fluidsynth.Synth(gain=3)
+        if is_windows:
+            self.is_windows = True
+            self.magnifcation = 5
+            self.midi_out = []
+        else:
+            self.is_windows = False
+            self.midi_out = fluidsynth.Synth(gain=3)
         self.music = music
             
     def start_game(self, running):
-        self.fs.start(driver='alsa')
-        sfid = self.fs.sfload('/usr/share/sounds/sf2/FluidR3_GM.sf2')
-        self.fs.program_select(0, sfid, BANK, INSTRUMENT) #instrument selection
-        #self.fs.program_select(0, sfid, 10, 0) 
-        print(self.fs.channel_info(0))
+        if self.is_windows:
+            pygame.init()
+            self.disp = pygame.display.set_mode((self.N*self.magnifcation,self.N*self.magnifcation), pygame.HWSURFACE)
+            pygame.display.set_caption('Pygame')
+            pygame.mouse.set_visible(0)
+            pygame.midi.init()
+            port = pygame.midi.get_default_output_id()
+            print ("using output_id :%s:" % port)
+            self.midi_out = pygame.midi.Output(port, 0)
+            self.midi_out.set_instrument(INSTRUMENT)
+        else:
+            self.midi_out.start(driver='alsa')
+            sfid = self.midi_out.sfload('/usr/share/sounds/sf2/FluidR3_GM.sf2')
+            self.midi_out.program_select(0, sfid, BANK, INSTRUMENT) #instrument selection
+            #self.midi_out.program_select(0, sfid, 10, 0) 
+            print(self.midi_out.channel_info(0))
         self.stop_requested = False
         current_interpframe = 0
         last_frame_time = time.clock()
@@ -228,8 +290,11 @@ class GameOfLife:
                         pitch = round(12 * (note / len(self.scale)) + (self.scale[round(note % len(self.scale))])) #convert note into key using the prechoosen scale
                         veolcity = int(round(np.mean(rgb_int2tuple(color))/255*MAXVELOCITY))
                         keys.append((pitch, veolcity))
-                #play_midi(last_keys, keys, self.midiout)
-                play_midi(last_keys, keys, self.fs)
+                #play_midi_fs(last_keys, keys, self.midiout)
+                if self.is_windows:
+                    play_midi_pygame(last_keys, keys, self.midi_out)
+                else:
+                    play_midi_fs(last_keys, keys, self.midi_out)
                 cursor += 1
                 last_note_time = current_time
                 
@@ -255,20 +320,33 @@ class GameOfLife:
                     else:
                         single_color_linear_array = np.intc(grid_interp_array + next_grid_interp_array)
                     #single_color_linear_array = self.grid_linear_color_array.copy()
-
-                self.disp.set_from_array(single_color_linear_array)
+                
+                if self.is_windows:
+                    local_GOL_display(self.disp, linear_color_array_to_grid(self.N, single_color_linear_array), self.magnifcation)
+                else:
+                    self.disp.set_from_array(single_color_linear_array)
                 last_frame_time = current_time
                 current_interpframe += 1
         
         if self.music:
             #turn off the last set of keys before aborting
-            play_midi(last_keys, [], self.fs)
-        self.fs.delete()
+            if self.is_windows:
+                play_midi_pygame(last_keys, [], self.midi_out)
+            else:
+                play_midi_fs(last_keys, [], self.midi_out)
+        if self.is_windows:
+            del self.midi_out
+            pygame.midi.quit()
+        else:
+            self.midi_out.delete()
 
 # call main 
 if __name__ == '__main__': 
     running = threading.Event()
-    disp = LEDdisplay()
-    game = GameOfLife(disp,FRAMERATE,music=True)
+    if is_windows_machine:
+        disp = []
+    else:
+        disp = LEDdisplay()
+    game = GameOfLife(disp,FRAMERATE,music=True,is_windows=is_windows_machine)
     running.set()
     game.start_game(running)

@@ -1,5 +1,5 @@
 import paho.mqtt.client as paho
-import sys, time#, json, struct
+import sys, time, json#, struct
 import numpy as np
 import RPi.GPIO as GPIO
 from enum import Enum
@@ -15,14 +15,13 @@ port=1883
 #ret= client.publish("linknodeR4bedroom/cmnd/Power1","TOGGLE")                   #publish for linknode
 
 topics = [("board/#",0)] #QOS 0
-
-frame_rate = 10 #10 Hz           
            
 class light_states(Enum):
     PowerOff = 0
     ConstantDisplay = 1
     CyclingSampleDisplay = 2
     PlayingGameOfLife = 3
+    Stream = 4
 
 light_state = light_states.PowerOff
 current_color = np.array([255., 255., 255.]) # store color as a normalized unit vector
@@ -70,8 +69,10 @@ def set_power_state(powerstate):
         GPIO.output(powersupplypin,0)     
     else:
         GPIO.output(powersupplypin,1)     
+    
+def parse_stream(json_payload):
     pass
-           
+
 def publish_update(client):
     global light_state, current_color, current_brightness
 #    client.publish('lightboard/status', json.dumps(status_json_payload()))
@@ -84,6 +85,9 @@ def publish_update(client):
     elif light_state == light_states.PlayingGameOfLife:
         client.publish('board/status', 'ON')
         client.publish('board/effect/status', 'Game of Life')
+    elif light_state == light_states.Stream:
+        client.publish('board/status', 'ON')
+        client.publish('board/effect/status', 'Stream')        
         
     client.publish('board/brightness/status', int(current_brightness))
 
@@ -132,7 +136,13 @@ def on_subscribe(client, userdata, mid, granted_qos):             #create functi
 
 def on_message(client, userdata, msg):
     global light_state, current_color, current_brightness
-    print(msg.topic+" "+str(msg.payload))
+    print(msg.topic+" "+str(msg.payload)) #debug
+    
+    if light_state == light_states.Stream and msg.topic == "board/stream/set":
+        #if we are streaming, look for stream messages
+        json_payload = json.loads(msg.payload) # you can use json.loads to convert string to json
+        parse_stream(json_payload)
+    
     if msg.topic == "board/switch":
         #lightboard on / off
         if msg.payload == b'ON':
@@ -169,7 +179,9 @@ def on_message(client, userdata, msg):
         elif msg.payload == b'Game of Life':
             # start playing game of life
             light_state = light_states.PlayingGameOfLife
-
+        elif msg.payload == b'Stream':
+            # start streaming music
+            light_state = light_states.Stream
             
         publish_update(client)
         
@@ -188,28 +200,33 @@ except:
     print("can't connect")
     sys.exit(1)
     
-client.loop_start() #start loop in background thread
+client.loop_start() #start mqtt loop forever in background thread
 
 running = threading.Event()
 background_thread = None
 last_light_state = light_state
 
 while True:
+    #main program loop
     #keep checking if we swiched light states
     if last_light_state != light_state: 
         # transitioning states
-        if light_state == light_states.PlayingGameOfLife:
-            print('starting game of life')
-            game_of_life = GameOfLife(disp, frame_rate)
-            running.set()
-            background_thread = threading.Thread(target=game_of_life.start_game, args=[running])
-            background_thread.start()
+        # stop things first if we need to
         if last_light_state == light_states.PlayingGameOfLife:
             print('stopping game of life')
             running.clear()
             time.sleep(1)
             set_power_state(light_state)
             set_color(real_color(current_color, current_brightness))
+                    
+            
+        if light_state == light_states.PlayingGameOfLife:
+            print('starting game of life')
+            game_of_life = GameOfLife(disp, frame_rate)
+            running.set()
+            background_thread = threading.Thread(target=game_of_life.start_game, args=[running])
+            background_thread.start()
+
         last_light_state = light_state
 
 
