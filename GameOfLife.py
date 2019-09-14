@@ -148,7 +148,7 @@ def setGrid(N):
     grid = np.zeros((N,N), dtype=int)
     for i in range(N):
         for j in range(N):
-            if (i == j) or (i == (N-j)):
+            if (i == j) or (i == (N-j-1)):
                 grid[i,j] = 1
     grid = 255*255*grid
     return grid
