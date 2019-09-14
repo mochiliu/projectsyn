@@ -145,9 +145,12 @@ def randomGrid(N):
 
 def setGrid(N): 
     """returns a grid of NxN random values"""
-    grid = np.ones((N,N), dtype=int)
-    grid[7:22, 7:22] = 0
-    grid = 255 * grid
+    grid = np.zeros((N,N), dtype=int)
+    for i in range(N):
+        for j in range(N):
+            if (i == j) or (i == (N-j)):
+                grid[i,j] = 1
+    grid = 255*255*grid
     return grid
 
 def addGlider(i, j, grid): 
