@@ -18,7 +18,7 @@ else:
 
 #presets
 SCALE = 'MAJORPENT'
-INSTRUMENT = 11
+INSTRUMENT = 0
 BANK = 0 #128 # (128,0) for precussion (0, INSTRUMENT) for melody
 
 #piano(0,0) rhodesep(0,4) legendep(0,5) glockenspiel (0,9) vibraphone (0,11) xylophone (0,13) tubularbells (0,14) 
@@ -241,7 +241,7 @@ class GameOfLife:
         self.disp = disp
         self.frame_period = 1.0 / frame_rate 
         self.N = 30
-        self.grid = setGrid(self.N)
+        self.grid = randomGrid(self.N)
         self.nextgrid, self.notes = update(self.grid)
         self.grid_linear_color_array = grid_to_linear_color_array(self.grid)
         self.next_grid_linear_color_array = grid_to_linear_color_array(self.nextgrid)

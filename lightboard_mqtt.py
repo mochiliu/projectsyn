@@ -28,7 +28,7 @@ current_color = np.array([255., 255., 255.]) # store color as a normalized unit 
 current_brightness = np.max(current_color)
 current_color = current_color / np.max(current_color)
 disp = LEDdisplay()
-
+frame_rate = 10
 
 def real_color(color, brightness):
     r_color = brightness * color
