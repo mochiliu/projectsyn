@@ -18,7 +18,7 @@ else:
 
 #presets
 SCALE = 'MAJORPENT'
-INSTRUMENT = 0
+INSTRUMENT = 11
 BANK = 0 #128 # (128,0) for precussion (0, INSTRUMENT) for melody
 
 #piano(0,0) rhodesep(0,4) legendep(0,5) glockenspiel (0,9) vibraphone (0,11) xylophone (0,13) tubularbells (0,14) 
