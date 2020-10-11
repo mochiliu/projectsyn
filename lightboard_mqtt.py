@@ -228,7 +228,7 @@ while True:
             background_thread.start()
 
         last_light_state = light_state
-
+    time.sleep(1)
 
 #client.loop_forever()
 client.disconnect()
